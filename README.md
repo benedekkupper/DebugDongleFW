@@ -1,4 +1,4 @@
-# DebugDongleFW
+# DebugDongle
 
 This repository contains the embedded firmware of the DebugDongle,
 a USB power supply and serial port for prototype debugging. 
