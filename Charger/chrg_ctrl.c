@@ -49,30 +49,20 @@ void Charger_Init(void)
     GPIO_vInitPin (USER_LED_PIN, USER_LED_CFG);
     GPIO_vWritePin(USER_LED_PIN, 1);
 
-    /* Vout default: 3.3V */
-    GPIO_vInitPin (VOUT_SELECT_PIN, VOUT_SELECT_CFG);
-
-    /* Switch controls Vout as long as USB is not configured */
-    GPIO_vInitPin (MODE_SWITCH_PIN, MODE_SWITCH_CFG);
-    GPIO_xPinCallbacks[MODE_SWITCH_LINE] = Charger_onSwitchChange;
-    NVIC_EnableIRQ(MODE_SWITCH_IRQN);
-
-    /* Apply switch configuration now */
-    Charger_onSwitchChange(MODE_SWITCH_LINE);
+    /* Vout default: input */
+    GPIO_vInitPin (VOUT_SELECT_PIN, VOUT_SELECT_IN_CFG);
+    GPIO_xPinCallbacks[VOUT_SELECT_LINE] = Charger_onSwitchChange;
+    NVIC_EnableIRQ(VOUT_SELECT_IRQN);
+    Charger_onSwitchChange(VOUT_SELECT_LINE);
 }
 
 /**
- * @brief Sets the Output voltage according to the new state of the mode switch.
+ * @brief Sets the User LED according to the new state of the mode switch.
  * @param x: unused
  */
 static void Charger_onSwitchChange(uint32_t x)
 {
-    FlagStatus sw = GPIO_eReadPin(MODE_SWITCH_PIN);
-
-    /* ON = GND
-     * LED: active low
-     * VOUT: 0 - 3.3V, 1 - 5V */
-    Charger_SetVoltage(!sw);
+    GPIO_vWritePin(USER_LED_PIN, GPIO_eReadPin(VOUT_SELECT_PIN));
 }
 
 /**
@@ -113,18 +103,18 @@ void Charger_SetConfig(void)
         currentLimit = Ichg_500mA;
     }
     Analog_Resume();
-    NVIC_DisableIRQ(MODE_SWITCH_IRQN);
 }
 
 /**
  * @brief Handles the deactivation of the charger USB interface:
  *         - Disables analog conversions
- *         - Enables the switch control of the Output voltage
+ *         - Disables the switch control of the Output voltage
  */
 void Charger_ClearConfig(void)
 {
     Analog_Halt();
-    NVIC_EnableIRQ(MODE_SWITCH_IRQN);
+    GPIO_vInitPin (VOUT_SELECT_PIN, VOUT_SELECT_IN_CFG);
+    NVIC_EnableIRQ(VOUT_SELECT_IRQN);
 }
 
 /**
@@ -194,7 +184,9 @@ void Charger_SetCurrent(ChargeCurrentType CurrentLevel)
  */
 void Charger_SetVoltage(OutputVoltageType Voltage)
 {
+    NVIC_DisableIRQ(VOUT_SELECT_IRQN);
     GPIO_vWritePin(USER_LED_PIN, 1 - Voltage);
+    GPIO_vInitPin (VOUT_SELECT_PIN, VOUT_SELECT_OUT_CFG);
     GPIO_vWritePin(VOUT_SELECT_PIN, Voltage);
 }
 

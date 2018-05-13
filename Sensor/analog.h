@@ -30,6 +30,7 @@ typedef struct
     int32_t Vdd_mV;
     int32_t Vbat_mV;
     int32_t Ichrg_mA;
+    int32_t Iout_mA;
     int32_t temp_C;
     int32_t light_lx;
 }AnalogMeasurementsType;

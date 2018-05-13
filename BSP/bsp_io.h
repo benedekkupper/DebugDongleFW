@@ -31,14 +31,17 @@ extern "C"
 #include <xpd_gpio.h>
 
 /* ADC channels */
-#define LIGHT_SENSOR_CH     1
+#define IOUT_CH             1
 #define VBAT_CH             4
+#define LIGHT_SENSOR_CH     7
 #define ICHARGE_CH          9
 
 /* GPIO pins */
-#define LIGHT_SENSOR_PIN    GPIOA, 1
+#define IOUT_PIN            GPIOA, 1
+#define LIGHT_SENSOR_PIN    GPIOA, 7
 #define VBAT_PIN            GPIOA, 4
 #define ICHARGE_PIN         GPIOB, 1
+#define IOUT_CFG            (&BSP_IOCfg[0])
 #define LIGHT_SENSOR_CFG    (&BSP_IOCfg[0])
 #define VBAT_CFG            (&BSP_IOCfg[0])
 #define ICHARGE_CFG         (&BSP_IOCfg[0])
@@ -53,19 +56,17 @@ extern "C"
 #define USER_LED_CFG        (&BSP_IOCfg[4])
 
 #define VOUT_SELECT_PIN     GPIOF, 0
-#define VOUT_SELECT_CFG     (&BSP_IOCfg[3])
+#define VOUT_SELECT_OUT_CFG (&BSP_IOCfg[3])
+/* EXTI mode */
+#define VOUT_SELECT_IN_CFG  (&BSP_IOCfg[2])
+#define VOUT_SELECT_IRQN    EXTI0_1_IRQn
+#define VOUT_SELECT_LINE    0
 
 #define CHARGER_STATUS_PIN  GPIOA, 5
 #define CHARGER_STATUS_CFG  (&BSP_IOCfg[1])
 
 #define USB_PWR_PIN         GPIOA, 0
 #define USB_PWR_CFG         (&BSP_IOCfg[1])
-
-/* EXTI mode */
-#define MODE_SWITCH_IRQN    EXTI4_15_IRQn
-#define MODE_SWITCH_LINE    7
-#define MODE_SWITCH_PIN     GPIOA, 7
-#define MODE_SWITCH_CFG     (&BSP_IOCfg[2])
 
 #define UART_TX_PIN         GPIOA, 2
 #define UART_RX_PIN         GPIOA, 3

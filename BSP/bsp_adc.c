@@ -46,6 +46,7 @@ static void adcinit(void * handle)
     ADC_vClockConfig(ADC_CLOCKSOURCE_PCLK_DIV4);
 
     /* GPIO settings */
+    GPIO_vInitPin(IOUT_PIN,         IOUT_CFG);
     GPIO_vInitPin(LIGHT_SENSOR_PIN, LIGHT_SENSOR_CFG);
     GPIO_vInitPin(VBAT_PIN,         VBAT_CFG);
     GPIO_vInitPin(ICHARGE_PIN,      ICHARGE_CFG);

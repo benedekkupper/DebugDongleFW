@@ -42,8 +42,9 @@ static const ADC_InitType adcSettings =
 /* On STM32F0 channel order is according to the channel number */
 typedef enum
 {
-    ADCH_LIGHT_SENSOR = 0,
+    ADCH_IOUT = 0,
     ADCH_VBAT,
+    ADCH_LIGHT_SENSOR,
     ADCH_ICHARGE,
     ADCH_TEMP,
     ADCH_VREFINT,
@@ -54,11 +55,15 @@ typedef enum
 static const ADC_ChannelInitType adcChannels[] =
 {
     {
-        .Number     = LIGHT_SENSOR_CH,
+        .Number     = IOUT_CH,
         .SampleTime = ADC_SAMPLETIME_239p5
     },
     {
         .Number     = VBAT_CH,
+        .SampleTime = ADC_SAMPLETIME_239p5
+    },
+    {
+        .Number     = LIGHT_SENSOR_CH,
         .SampleTime = ADC_SAMPLETIME_239p5
     },
     {
@@ -106,6 +111,9 @@ static void analogConvertMeasured(void * handle)
 
     /* lx = (Vmeas / R=10K) * 500 / 300 */
     measurements.light_lx = ADC_lCalcExt_mV(conversions[ADCH_LIGHT_SENSOR]) * 5 / 30;
+
+    /*  I = Vmeas / (R=1K * k=1/1000) */
+    measurements.Iout_mA  = ADC_lCalcExt_mV(conversions[ADCH_IOUT]);
 }
 
 /**
