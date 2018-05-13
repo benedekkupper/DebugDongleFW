@@ -56,7 +56,7 @@ extern "C"
 #define VOUT_SELECT_CFG     (&BSP_IOCfg[3])
 
 #define CHARGER_STATUS_PIN  GPIOA, 5
-#define CHARGER_STATUS_CFG  (&BSP_IOCfg[4])
+#define CHARGER_STATUS_CFG  (&BSP_IOCfg[1])
 
 #define USB_PWR_PIN         GPIOA, 0
 #define USB_PWR_CFG         (&BSP_IOCfg[1])

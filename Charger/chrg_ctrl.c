@@ -42,9 +42,8 @@ void Charger_Init(void)
     /* ISET2 default: float to limit charging to 100mA */
     GPIO_vDeinitPin(CHARGER_CURRENT_PIN);
 
-    /* nCHG default: drive 1 to use as input */
+    /* nCHG default: use as input */
     GPIO_vInitPin (CHARGER_STATUS_PIN, CHARGER_STATUS_CFG);
-    GPIO_vWritePin(CHARGER_STATUS_PIN, 1);
 
     /* User LED */
     GPIO_vInitPin (USER_LED_PIN, USER_LED_CFG);
