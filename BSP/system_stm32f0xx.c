@@ -27,6 +27,26 @@
 /** @brief Global variable used to store the actual system clock frequency [Hz] */
 uint32_t SystemCoreClock;
 
+/** @brief Interrupt vector table in flash */
+extern const uint32_t g_pfnVectors[];
+
+uint32_t __attribute__((section (".isr_vector_sram"))) g_pfnVectorsCpy[48];
+
+/**
+ * @brief Copies the vector table to the beginning of SRAM
+ *        and remaps 0 address to SRAM in SYSCFG.
+ */
+static void VectorTableRemap(void)
+{
+    int i = 48; /* CM0 has fixed 16 core and 32 vendor-specific interrupt vectors */
+    int *src = (int*)g_pfnVectors, *desc = (int*)g_pfnVectorsCpy;
+    while (i--)
+        *desc++ = *src++;
+
+    /* Set Memory Mode to SRAM (0x20000000 is remapped to 0x00000000) */
+    SYSCFG->CFGR1.b.MEM_MODE = 3;
+}
+
 /**
  * @brief  Setup the microcontroller system.
  *         Initialize the default HSI clock source,
@@ -47,4 +67,8 @@ void SystemInit(void)
 
     /* TODO Configure system memory options */
     FLASH_vPrefetchBuffer(ENABLE);
+
+    /* Due to application offset in flash,
+     * interrupt vectors have to be mapped to SRAM */
+    VectorTableRemap();
 }

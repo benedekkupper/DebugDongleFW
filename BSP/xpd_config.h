@@ -27,8 +27,8 @@
 #include <stm32f042x6.h>
 
 /* TODO step 2: specify power supplies */
-#define VDD_VALUE                   3300 /* Value of VDD in mV */
-#define VDDA_VALUE                  3300 /* Value of VDD Analog in mV */
+#define VDD_VALUE_mV                   3300 /* Value of VDD in mV */
+#define VDDA_VALUE_mV                  3300 /* Value of VDD Analog in mV */
 
 /* TODO step 3: specify oscillator parameters */
 /* #define HSE_VALUE_Hz 80000000

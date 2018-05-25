@@ -26,6 +26,12 @@
 #include <chrg_if.h>
 #include <sens_if.h>
 
+#include <usbd_dfu.h>
+/* DFU interface is initialized by bootloader */
+USBD_DFU_IfHandleType __attribute__((section (".dfuSharedSection"))) hdfu_if;
+USBD_DFU_IfHandleType *const dfu_if = &hdfu_if;
+
+
 /** @brief USB device configuration */
 const USBD_DescriptionType dev_cfg = {
     .Vendor = {
@@ -86,7 +92,10 @@ void UsbDevice_Init(void)
 
             sens_if->Config.InEp.Num = 0x83;
 
+            USBD_DFU_AppInit(dfu_if, 100); /* Detach can be carried out within 100 ms */
+
             /* Mount the interfaces to the device */
+            USBD_DFU_MountInterface(dfu_if, UsbDevice);
             USBD_CDC_MountInterface(vcp_if, UsbDevice);
             USBD_HID_MountInterface(chrg_if, UsbDevice);
             USBD_HID_MountInterface(sens_if, UsbDevice);

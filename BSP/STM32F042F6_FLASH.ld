@@ -44,7 +44,7 @@ _Min_Stack_Size = 0x80; /* required amount of stack */
 /* Specify the memory areas */
 MEMORY
 {
-  FLASH (rx)      : ORIGIN = 0x08000000, LENGTH = 32K
+  FLASH (rx)      : ORIGIN = 0x08002000, LENGTH = 24K
   RAM (xrw)       : ORIGIN = 0x20000000, LENGTH = 6K
   MEMORY_B1 (rx)  : ORIGIN = 0x60000000, LENGTH = 0K
 }
@@ -114,6 +114,20 @@ SECTIONS
     PROVIDE_HIDDEN (__fini_array_end = .);
   } >FLASH
 
+  /* Interrupt vector table */
+  .isr_vector_sram 0x20000000 :
+  {
+    . = ALIGN(4);
+    KEEP(*(.isr_vector_sram))
+    . = ALIGN(4);
+  } >RAM
+  
+  /* RAM variables for DFU */
+  .shared_ram 0x200000C0 :
+  {
+      KEEP(*(.dfuSharedSection))
+  } >RAM
+  
   /* used by the startup to initialize data */
   _sidata = LOADADDR(.data);
 

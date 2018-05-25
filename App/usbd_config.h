@@ -34,8 +34,8 @@ extern "C"
 /** @addtogroup USBD_Exported_Macros USBD Exported Macros
  * @{ */
 
-/* 2 - VCP, 1 - Sensor HID, 1 - Power HID */
-#define USBD_MAX_IF_COUNT           4
+/* Must match with value in bootloader */
+#define USBD_MAX_IF_COUNT           8
 
 /* Large enough for complete configuration descriptor as well as strings */
 #define USBD_EP0_BUFFER_SIZE        256
