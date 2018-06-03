@@ -33,7 +33,7 @@ USBD_DFU_IfHandleType *const dfu_if = &hdfu_if;
 
 
 /** @brief USB device configuration */
-const USBD_DescriptionType dev_cfg = {
+const USBD_DescriptionType hdev_cfg = {
     .Vendor = {
         .Name           = "IntergatedCircuits",
         .ID             = 0xffff, /* TODO placeholder */
@@ -41,7 +41,7 @@ const USBD_DescriptionType dev_cfg = {
     .Product = {
         .Name           = "DebugDongle",
         .ID             = 0xffff, /* TODO placeholder */
-        .Version.bcd    = 0x0100,
+        .Version        = {{ 1,0x0B }},
     },
     .SerialNumber       = (USBD_SerialNumberType*)DEVICE_ID_REG,
     .Config = {
@@ -50,7 +50,7 @@ const USBD_DescriptionType dev_cfg = {
         .RemoteWakeup   = 0,
         .SelfPowered    = 0,
     },
-};
+}, *const dev_cfg = &hdev_cfg;
 
 /** @brief USB device handle */
 USBD_HandleType hUsbDevice, *const UsbDevice = &hUsbDevice;
@@ -68,7 +68,7 @@ void UsbDevice_Init(void)
     USB_ChargerType usbPort;
 
     /* Initialize the device */
-    USBD_Init(UsbDevice, &dev_cfg);
+    USBD_Init(UsbDevice, dev_cfg);
 
     /* Set the available current limit based on the USB connection type */
     usbPort = USB_eChargerDetect(UsbDevice);
