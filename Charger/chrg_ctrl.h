@@ -41,8 +41,9 @@ typedef enum
 
 typedef enum
 {
-    Vout_3V3 = 0,
-    Vout_5V
+    Vout_off = 0,
+    Vout_3V3,
+    Vout_5V,
 }OutputVoltageType;
 
 void Charger_Init(void);
@@ -54,7 +55,9 @@ int Charger_GetVoltage_mV(void);
 
 void Charger_SetType(USB_ChargerType UsbCharger);
 void Charger_SetCurrent(ChargeCurrentType CurrentLevel);
-void Charger_SetVoltage(OutputVoltageType Voltage);
+
+void Output_SetVoltage(OutputVoltageType Voltage);
+OutputVoltageType Output_GetVoltage(void);
 
 boolean_t Charger_UsbPowerPresent(void);
 

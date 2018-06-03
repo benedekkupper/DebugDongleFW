@@ -113,6 +113,7 @@ void Charger_SetConfig(void)
 void Charger_ClearConfig(void)
 {
     Analog_Halt();
+    Analog_IoutConfig(ENABLE);
     GPIO_vInitPin (VOUT_SELECT_PIN, VOUT_SELECT_IN_CFG);
     NVIC_EnableIRQ(VOUT_SELECT_IRQN);
 }
@@ -182,12 +183,46 @@ void Charger_SetCurrent(ChargeCurrentType CurrentLevel)
  * @brief Sets the Output voltage.
  * @param Voltage: the new voltage to provide
  */
-void Charger_SetVoltage(OutputVoltageType Voltage)
+void Output_SetVoltage(OutputVoltageType Voltage)
 {
     NVIC_DisableIRQ(VOUT_SELECT_IRQN);
-    GPIO_vWritePin(USER_LED_PIN, 1 - Voltage);
-    GPIO_vInitPin (VOUT_SELECT_PIN, VOUT_SELECT_OUT_CFG);
-    GPIO_vWritePin(VOUT_SELECT_PIN, Voltage);
+
+    if (Voltage != Vout_off)
+    {
+        GPIO_vWritePin(IOUT_PIN, 0);
+        Analog_IoutConfig(ENABLE);
+        GPIO_vWritePin(USER_LED_PIN, 2 - Voltage);
+        GPIO_vInitPin (VOUT_SELECT_PIN, VOUT_SELECT_OUT_CFG);
+        GPIO_vWritePin(VOUT_SELECT_PIN, Voltage - 1);
+    }
+    else
+    {
+        Analog_IoutConfig(DISABLE);
+        GPIO_vInitPin (IOUT_PIN, IOUT_CTRL_CFG);
+        GPIO_vWritePin(IOUT_PIN, 1);
+    }
+}
+
+/**
+ * @brief Determines the current output voltage configuration.
+ * @return The current output voltage setting
+ */
+OutputVoltageType Output_GetVoltage(void)
+{
+    OutputVoltageType Voltage;
+    if (GPIO_eReadPin(IOUT_PIN))
+    {
+        Voltage = Vout_off;
+    }
+    else if (GPIO_eReadPin(IOUT_PIN))
+    {
+        Voltage = Vout_5V;
+    }
+    else
+    {
+        Voltage = Vout_3V3;
+    }
+    return Voltage;
 }
 
 /**

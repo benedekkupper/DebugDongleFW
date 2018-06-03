@@ -80,6 +80,7 @@ static const ADC_ChannelInitType adcChannels[] =
     },
 };
 
+static uint8_t iout_disabled = 0;
 static uint16_t conversions[ADCH_COUNT];
 static AnalogMeasurementsType measurements;
 
@@ -155,6 +156,31 @@ void Analog_Deinit(void)
 {
     TIM_vDeinit(adTrg);
     ADC_vDeinit(adc);
+}
+
+/**
+ * @brief Enables or disables measurement of the output current channel.
+ * @param Enabled: the new setting
+ */
+void Analog_IoutConfig(int Enabled)
+{
+    ADC_vStop_DMA(adc);
+
+    if (Enabled)
+    {
+        GPIO_vInitPin(IOUT_PIN, IOUT_CFG);
+        iout_disabled = 0;
+    }
+    else
+    {
+        iout_disabled = 1;
+        conversions[ADCH_IOUT] = 0;
+    }
+
+    ADC_vChannelConfig(adc, &adcChannels[iout_disabled],
+            sizeof(adcChannels)/sizeof(adcChannels[0]) - iout_disabled);
+
+    ADC_eStart_DMA(adc, &conversions[iout_disabled]);
 }
 
 /**

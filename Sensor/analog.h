@@ -37,6 +37,7 @@ typedef struct
 
 void Analog_Init(void);
 void Analog_Deinit(void);
+void Analog_IoutConfig(int Enabled);
 void Analog_Halt(void);
 void Analog_Resume(void);
 const AnalogMeasurementsType * Analog_GetValues(void);

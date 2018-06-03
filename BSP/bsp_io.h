@@ -45,6 +45,7 @@ extern "C"
 #define LIGHT_SENSOR_CFG    (&BSP_IOCfg[0])
 #define VBAT_CFG            (&BSP_IOCfg[0])
 #define ICHARGE_CFG         (&BSP_IOCfg[0])
+#define IOUT_CTRL_CFG       (&BSP_IOCfg[3])
 
 #define CHARGER_CURRENT_PIN GPIOA, 6
 #define CHARGER_CURRENT_CFG (&BSP_IOCfg[3])
