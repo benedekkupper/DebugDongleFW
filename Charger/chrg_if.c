@@ -103,6 +103,16 @@ HID_USAGE_PAGE_POWER_DEVICE,
                 HID_LOGICAL_MAX_8(1),
                 HID_FEATURE(Const_Arr_Abs),
 
+                /* Measured output current */
+                HID_USAGE_PS_CURRENT,
+                HID_REPORT_SIZE(16),
+                HID_REPORT_COUNT(1),
+                HID_LOGICAL_MIN_16(0),
+                HID_LOGICAL_MAX_16(1000),
+                HID_UNIT_AMPERE,
+                HID_UNIT_EXPONENT(-3),
+                HID_INPUT(Const_Var_Abs),
+
             HID_END_COLLECTION,
 
         HID_END_COLLECTION,
@@ -201,6 +211,21 @@ HID_USAGE_PAGE_POWER_DEVICE,
 #endif /* 1 */
 };
 
+static uint8_t inputsel = 0;
+
+/** @brief HID IN report #2 internal layout */
+typedef struct {
+    uint16_t mA;
+}__packed Charger_InOutputType;
+
+/** @brief HID IN report #2 buffer */
+struct {
+    uint8_t id;
+    Charger_InOutputType output;
+}__packed vout_input = {
+    .id = 2,
+};
+
 /** @brief HID IN report #4 internal layout */
 typedef struct {
     uint16_t mV;
@@ -263,8 +288,8 @@ struct {
     Charger_FtBatteryType battery;
 }__packed chrg_feature = {
     .usb.mV = 5000,
-    .out.mV = 3300,
-    .out.buck = 1,
+    .out.mV = 5000,
+    .out.buck = 0,
     .out.used = 1,
     .charger.mA = 100,
     .battery.capacity = 0,
@@ -287,8 +312,22 @@ static void Charger_GetReport(uint8_t reportId)
         }
         case 2:
         {
-            /* Update value with measured */
-            chrg_feature.out.mV = (uint16_t)Analog_GetValues()->Vdd_mV;
+            OutputVoltageType conf = Output_GetVoltage();
+
+            if (conf == Vout_off)
+            {
+                /* Not possible to set with switch, values are set */
+            }
+            else if (conf == Vout_5V)
+            {
+                chrg_feature.out.buck = 0;
+                chrg_feature.out.mV = 5000;
+            }
+            else
+            {
+                chrg_feature.out.buck = 1;
+                chrg_feature.out.mV = (uint16_t)Analog_GetValues()->Vdd_mV;
+            }
 
             USBD_HID_ReportIn(chrg_if,
                     (uint8_t*)&chrg_feature.out,
@@ -328,17 +367,26 @@ static void Charger_SetOutReport(Charger_FtOutType *out)
     /* output voltage change:
      * 5V if voltage is higher than 4.5V
      * and Buck converter is disabled on output */
-    if ((out->mV > 4500) && (out->buck == 0))
+    if (out->used == 0)
     {
-        Charger_SetVoltage(Vout_5V);
+        Output_SetVoltage(Vout_off);
+        chrg_feature.out.mV = 0;
+        chrg_feature.out.buck = 0;
+        chrg_feature.out.used = 0;
+    }
+    else if ((out->mV > 4500) && (out->buck == 0))
+    {
+        Output_SetVoltage(Vout_5V);
         chrg_feature.out.mV = 5000;
         chrg_feature.out.buck = 0;
+        chrg_feature.out.used = 1;
     }
     else
     {
-        Charger_SetVoltage(Vout_3V3);
+        Output_SetVoltage(Vout_3V3);
         chrg_feature.out.mV = (uint16_t)Analog_GetValues()->Vdd_mV;
         chrg_feature.out.buck = 1;
+        chrg_feature.out.used = 1;
     }
 }
 
@@ -377,9 +425,6 @@ static void Charger_SetChargerReport(Charger_FtChargerType *charger)
  */
 static void Charger_SetBatteryReport(Charger_FtBatteryType *battery)
 {
-    /* Convert A/s to mAh */
-    uint32_t cap_mAh = battery->capacity * 1000 / 3600;
-
     /* Copy input data */
     chrg_feature.battery = *battery;
 
@@ -489,8 +534,19 @@ void Charger_Periodic(void)
             }
         }
 
+        vout_input.output.mA = Analog_GetValues()->Iout_mA;
+
         /* Send report through IN pipe */
-        USBD_HID_ReportIn(chrg_if, (uint8_t*)&chrg_input, sizeof(chrg_input));
+        if ((inputsel++ & 1) != 0)
+        {
+            USBD_HID_ReportIn(chrg_if,
+                        (uint8_t*)&chrg_input, sizeof(chrg_input));
+        }
+        else
+        {
+            USBD_HID_ReportIn(chrg_if,
+                        (uint8_t*)&vout_input, sizeof(vout_input));
+        }
     }
 }
 
