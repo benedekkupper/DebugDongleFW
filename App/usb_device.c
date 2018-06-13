@@ -92,7 +92,7 @@ void UsbDevice_Init(void)
 
             sens_if->Config.InEp.Num = 0x83;
 
-            USBD_DFU_AppInit(dfu_if, 100); /* Detach can be carried out within 100 ms */
+            USBD_DFU_AppInit(dfu_if, 250); /* Detach can be carried out within 250 ms */
 
             /* Mount the interfaces to the device */
             USBD_DFU_MountInterface(dfu_if, UsbDevice);
