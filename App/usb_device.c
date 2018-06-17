@@ -41,7 +41,7 @@ const USBD_DescriptionType hdev_cfg = {
     .Product = {
         .Name           = "DebugDongle",
         .ID             = 0xffff, /* TODO placeholder */
-        .Version        = {{ 1,0x0B }},
+        .Version.bcd    = 0x010B,
     },
     .SerialNumber       = (USBD_SerialNumberType*)DEVICE_ID_REG,
     .Config = {
