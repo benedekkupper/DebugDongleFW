@@ -474,7 +474,7 @@ void Charger_Periodic(void)
         if ((chrg_feature.charger.mA > 0) && (chrg_input.battery.mA == 0))
         {
             /* Disconnected charger voltage = 4.1V */
-            if ((chrg_input.battery.mV > 4080) && (chrg_input.battery.mV > 4120))
+            if ((chrg_input.battery.mV > 4100) && (chrg_input.battery.mV < 4170))
             {
                 chrg_input.battery.present = 0;
                 chrg_input.battery.charged = 0;
