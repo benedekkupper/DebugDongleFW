@@ -211,103 +211,313 @@ HID_USAGE_PAGE_POWER_DEVICE,
 #endif /* 1 */
 };
 
-static uint8_t inputsel = 0;
-
-/** @brief HID IN report #2 internal layout */
-typedef struct {
-    uint16_t mA;
-}__packed Charger_InOutputType;
-
 /** @brief HID IN report #2 buffer */
 struct {
     uint8_t id;
-    Charger_InOutputType output;
+    struct {
+        uint16_t mA;
+    }output;
 }__packed vout_input = {
     .id = 2,
 };
 
-/** @brief HID IN report #4 internal layout */
-typedef struct {
-    uint16_t mV;
-    uint16_t mA;
-    uint16_t remcap;
-    union {
-        struct {
-            uint8_t charged : 1;
-            uint8_t discharged : 1;
-            uint8_t present : 1;
-            uint8_t overheat : 1;
-            uint8_t : 4;
-        };
-        uint8_t b;
-    };
-}__packed Charger_InBatteryType;
-
 /** @brief HID IN report #4 buffer */
 struct {
     uint8_t id;
-    Charger_InBatteryType battery;
+    struct {
+        uint16_t mV;
+        uint16_t mA;
+        uint16_t remcap;
+        union {
+            struct {
+                uint8_t charged : 1;
+                uint8_t discharged : 1;
+                uint8_t present : 1;
+                uint8_t overheat : 1;
+                uint8_t : 4;
+            };
+            uint8_t b;
+        };
+    }battery;
 }__packed chrg_input = {
     .id = 4,
     .battery.b = 0,
 };
 
-/** @brief HID Feature report #1 layout */
-typedef struct {
-    uint16_t mV;
-}__packed Charger_FtUsbType;
+/** @brief HID Feature report #1 buffer */
+struct {
+    uint8_t id;
+    struct {
+        uint16_t mV;
+    }usb;
+}__packed chrg_ftUsb = {
+    .id = 1,
+    .usb.mV = 5000,
+};
 
-/** @brief HID Feature report #2 layout */
+/** @brief HID Feature report #2 buffer */
 typedef struct {
-    uint16_t mV;
-    union {
-        struct {
-            uint8_t used : 1;
-            uint8_t buck : 1;
-            uint8_t : 6;
+    uint8_t id;
+    struct {
+        uint16_t mV;
+        union {
+            struct {
+                uint8_t used : 1;
+                uint8_t buck : 1;
+                uint8_t : 6;
+            };
+            uint8_t b;
         };
-        uint8_t b;
-    };
+    }out;
 }__packed Charger_FtOutType;
 
-/** @brief HID Feature report #3 layout */
-typedef struct {
-    uint16_t mA;
-}__packed Charger_FtChargerType;
-
-/** @brief HID Feature report #4 layout */
-typedef struct {
-    uint16_t capacity;
-}__packed Charger_FtBatteryType;
-
-/** @brief HID Feature reports buffer */
-struct {
-    Charger_FtUsbType usb;
-    Charger_FtOutType out;
-    Charger_FtChargerType charger;
-    Charger_FtBatteryType battery;
-}__packed chrg_feature = {
-    .usb.mV = 5000,
+Charger_FtOutType chrg_ftOut = {
+    .id = 2,
     .out.mV = 5000,
     .out.buck = 0,
     .out.used = 1,
+};
+
+/** @brief HID Feature report #3 buffer */
+typedef struct {
+    uint8_t id;
+    struct {
+        uint16_t mA;
+    }charger;
+}__packed Charger_FtChargerType;
+
+Charger_FtChargerType chrg_ftCharger = {
+    .id = 3,
     .charger.mA = 100,
+};
+
+/** @brief HID Feature report #4 buffer */
+typedef struct {
+    uint8_t id;
+    struct {
+        uint16_t capacity;
+    }battery;
+}__packed Charger_FtBatteryType;
+
+Charger_FtBatteryType chrg_ftBatt = {
+    .id = 4,
     .battery.capacity = 0,
 };
 
 /**
+ * @brief Applies the output feature report's parameters on the device.
+ * @param report: the input report
+ */
+static void Charger_SetOutReport(Charger_FtOutType *report)
+{
+    /* output voltage change:
+     * 5V if voltage is higher than 4.5V
+     * and Buck converter is disabled on output */
+    if (report->out.used == 0)
+    {
+        Output_SetVoltage(Vout_off);
+        chrg_ftOut.out.mV = 0;
+        chrg_ftOut.out.buck = 0;
+        chrg_ftOut.out.used = 0;
+    }
+    else if ((report->out.mV > 4500) && (report->out.buck == 0))
+    {
+        Output_SetVoltage(Vout_5V);
+        chrg_ftOut.out.mV = 5000;
+        chrg_ftOut.out.buck = 0;
+        chrg_ftOut.out.used = 1;
+    }
+    else
+    {
+        Output_SetVoltage(Vout_3V3);
+        chrg_ftOut.out.mV = (uint16_t)Analog_GetValues()->Vdd_mV;
+        chrg_ftOut.out.buck = 1;
+        chrg_ftOut.out.used = 1;
+    }
+}
+
+/**
+ * @brief Applies the charger feature report's parameters on the device.
+ * @param report: the input report
+ */
+static void Charger_SetChargerReport(Charger_FtChargerType *report)
+{
+    /* charge current change */
+    if (report->charger.mA > 500)
+    {
+        Charger_SetCurrent(Ichg_800mA);
+        chrg_ftCharger.charger.mA = 800;
+    }
+    else if (report->charger.mA > 100)
+    {
+        Charger_SetCurrent(Ichg_500mA);
+        chrg_ftCharger.charger.mA = 500;
+    }
+    else if (report->charger.mA > 0)
+    {
+        Charger_SetCurrent(Ichg_100mA);
+        chrg_ftCharger.charger.mA = 100;
+    }
+    else
+    {
+        Charger_SetCurrent(Ichg_0mA);
+        chrg_ftCharger.charger.mA = 0;
+    }
+}
+
+/**
+ * @brief Applies the battery feature report's parameters on the device.
+ * @param report: the input report
+ */
+static void Charger_SetBatteryReport(Charger_FtBatteryType *report)
+{
+    /* Copy input data */
+    chrg_ftBatt = *report;
+}
+
+/**
+ * @brief Sets the device configuration according to the received feature report.
+ * @param type: report type (here always FEATURE)
+ * @param data: report data
+ * @param length: total length of the report
+ */
+static void Charger_SetReport(USBD_HID_ReportType type, uint8_t * data, uint16_t length)
+{
+    /* First data element is the report ID */
+    switch (data[0])
+    {
+        case 1: /* Nothing to set for USB power source */
+            break;
+
+        case 2:
+            Charger_SetOutReport((Charger_FtOutType*)&data[0]);
+            break;
+
+        case 3:
+            Charger_SetChargerReport((Charger_FtChargerType*)&data[0]);
+            break;
+
+        case 4:
+            Charger_SetBatteryReport((Charger_FtBatteryType*)&data[0]);
+            break;
+
+        default:
+            break;
+    }
+}
+
+/**
+ * @brief Updates and sends IN report #2
+ */
+void Charger_SendOutputReport(void)
+{
+    vout_input.output.mA = Analog_GetValues()->Iout_mA;
+    USBD_HID_ReportIn(chrg_if,
+                (uint8_t*)&vout_input, sizeof(vout_input));
+}
+
+/**
+ * @brief Updates and sends IN report #4
+ */
+void Charger_SendBatteryReport(void)
+{
+    chrg_input.battery.mV = (uint16_t)Charger_GetVoltage_mV();
+    chrg_input.battery.mA = (uint16_t)Charger_GetCurrent_mA();
+
+    /* If charging enabled, but no current */
+    if ((chrg_ftCharger.charger.mA > 0) && (chrg_input.battery.mA == 0))
+    {
+        /* Disconnected charger voltage = 4.1V */
+        if ((chrg_input.battery.mV > 4100) && (chrg_input.battery.mV < 4170))
+        {
+            chrg_input.battery.b = 0;
+            chrg_input.battery.remcap = 0;
+        }
+        else /* Battery is connected, but charging is complete */
+        {
+            chrg_input.battery.present = 1;
+            chrg_input.battery.charged = 1;
+            chrg_input.battery.discharged = 0;
+            chrg_input.battery.overheat = 0;
+        }
+    }
+    else if ((chrg_ftCharger.charger.mA == 0) && (chrg_input.battery.mV < 2000))
+    {
+        chrg_input.battery.b = 0;
+        chrg_input.battery.remcap = 0;
+    }
+    else
+    {
+        chrg_input.battery.present = 1;
+        chrg_input.battery.charged = 0;
+
+        /* reduce charge current when overheated */
+        if ((Analog_GetValues()->temp_C > 50) &&
+            (chrg_ftCharger.charger.mA >= 500) &&
+            (chrg_input.battery.mA > 300))
+        {
+            Charger_FtChargerType reduced;
+            reduced.charger.mA = 100;
+            Charger_SetChargerReport(&reduced);
+
+            chrg_input.battery.discharged = 0;
+            chrg_input.battery.overheat = 1;
+        }
+        else if (chrg_input.battery.mV < LiDischarge_mV)
+        {
+            chrg_input.battery.discharged = 1;
+            chrg_input.battery.overheat = 0;
+        }
+        else
+        {
+            chrg_input.battery.discharged = 0;
+            chrg_input.battery.overheat = 0;
+        }
+    }
+
+    /* convert Vbat to remaining capacity */
+    if (chrg_input.battery.present != 0)
+    {
+        /* TODO Different characteristics apply for a charged battery
+         * than a discharged */
+        {
+            /* Simple linear approximation for now */
+            int remcap = (int)chrg_ftBatt.battery.capacity *
+            ((int)chrg_input.battery.mV - (int)LiDischarge_mV) /
+            ((int)LiCharged_mV - (int)LiDischarge_mV);
+
+            chrg_input.battery.remcap = (uint16_t)remcap;
+        }
+    }
+    USBD_HID_ReportIn(chrg_if,
+                (uint8_t*)&chrg_input, sizeof(chrg_input));
+}
+
+/**
  * @brief Returns a requested feature report (through the CTRL endpoint).
+ * @param type: requested report's type
  * @param reportId: The feature report's ID
  */
-static void Charger_GetReport(uint8_t reportId)
+static void Charger_GetReport(USBD_HID_ReportType type, uint8_t reportId)
 {
-    switch (reportId)
+    if (type == HID_REPORT_INPUT) switch (reportId)
+    {
+        case 2:
+            Charger_SendOutputReport();
+            break;
+        case 4:
+            Charger_SendBatteryReport();
+            break;
+        default:
+            break;
+    }
+    else switch (reportId)
     {
         case 1:
         {
             USBD_HID_ReportIn(chrg_if,
-                    (uint8_t*)&chrg_feature.usb,
-                    sizeof(chrg_feature.usb));
+                    (uint8_t*)&chrg_ftUsb,
+                    sizeof(chrg_ftUsb));
             break;
         }
         case 2:
@@ -320,145 +530,40 @@ static void Charger_GetReport(uint8_t reportId)
             }
             else if (conf == Vout_5V)
             {
-                chrg_feature.out.buck = 0;
-                chrg_feature.out.mV = 5000;
+                chrg_ftOut.out.buck = 0;
+                chrg_ftOut.out.mV = 5000;
             }
             else
             {
-                chrg_feature.out.buck = 1;
-                chrg_feature.out.mV = (uint16_t)Analog_GetValues()->Vdd_mV;
+                chrg_ftOut.out.buck = 1;
+                chrg_ftOut.out.mV = (uint16_t)Analog_GetValues()->Vdd_mV;
             }
 
             USBD_HID_ReportIn(chrg_if,
-                    (uint8_t*)&chrg_feature.out,
-                    sizeof(chrg_feature.out));
+                    (uint8_t*)&chrg_ftOut,
+                    sizeof(chrg_ftOut));
             break;
         }
         case 3:
         {
             USBD_HID_ReportIn(chrg_if,
-                    (uint8_t*)&chrg_feature.charger,
-                    sizeof(chrg_feature.charger));
+                    (uint8_t*)&chrg_ftCharger,
+                    sizeof(chrg_ftCharger));
             break;
         }
         case 4:
         {
             USBD_HID_ReportIn(chrg_if,
-                    (uint8_t*)&chrg_feature.battery,
-                    sizeof(chrg_feature.battery));
+                    (uint8_t*)&chrg_ftBatt,
+                    sizeof(chrg_ftBatt));
             break;
         }
-        default: /* Invalid ID, return the entire feature report */
-        {
-            USBD_HID_ReportIn(chrg_if,
-                    (uint8_t*)&chrg_feature,
-                    sizeof(chrg_feature));
-            break;
-        }
-    }
-}
-
-/**
- * @brief Applies the output feature report's parameters on the device.
- * @param out: the input report
- */
-static void Charger_SetOutReport(Charger_FtOutType *out)
-{
-    /* output voltage change:
-     * 5V if voltage is higher than 4.5V
-     * and Buck converter is disabled on output */
-    if (out->used == 0)
-    {
-        Output_SetVoltage(Vout_off);
-        chrg_feature.out.mV = 0;
-        chrg_feature.out.buck = 0;
-        chrg_feature.out.used = 0;
-    }
-    else if ((out->mV > 4500) && (out->buck == 0))
-    {
-        Output_SetVoltage(Vout_5V);
-        chrg_feature.out.mV = 5000;
-        chrg_feature.out.buck = 0;
-        chrg_feature.out.used = 1;
-    }
-    else
-    {
-        Output_SetVoltage(Vout_3V3);
-        chrg_feature.out.mV = (uint16_t)Analog_GetValues()->Vdd_mV;
-        chrg_feature.out.buck = 1;
-        chrg_feature.out.used = 1;
-    }
-}
-
-/**
- * @brief Applies the charger feature report's parameters on the device.
- * @param charger: the input report
- */
-static void Charger_SetChargerReport(Charger_FtChargerType *charger)
-{
-    /* charge current change */
-    if (charger->mA > 500)
-    {
-        Charger_SetCurrent(Ichg_800mA);
-        chrg_feature.charger.mA = 800;
-    }
-    else if (charger->mA > 100)
-    {
-        Charger_SetCurrent(Ichg_500mA);
-        chrg_feature.charger.mA = 500;
-    }
-    else if (charger->mA > 0)
-    {
-        Charger_SetCurrent(Ichg_100mA);
-        chrg_feature.charger.mA = 100;
-    }
-    else
-    {
-        Charger_SetCurrent(Ichg_0mA);
-        chrg_feature.charger.mA = 0;
-    }
-}
-
-/**
- * @brief Applies the battery feature report's parameters on the device.
- * @param battery: the input report
- */
-static void Charger_SetBatteryReport(Charger_FtBatteryType *battery)
-{
-    /* Copy input data */
-    chrg_feature.battery = *battery;
-
-}
-
-/**
- * @brief Sets the device configuration according to the received feature report.
- * @param data: element 0 is the ID, the rest is the data to set
- * @param length: 1 + length of the report
- */
-static void Charger_SetReport(uint8_t * data, uint16_t length)
-{
-    /* First data element is the report ID */
-    switch (data[0])
-    {
-        case 1: /* Nothing to set for USB power source */
-            break;
-
-        case 2:
-            Charger_SetOutReport((Charger_FtOutType*)&data[1]);
-            break;
-
-        case 3:
-            Charger_SetChargerReport((Charger_FtChargerType*)&data[1]);
-            break;
-
-        case 4:
-            Charger_SetBatteryReport((Charger_FtBatteryType*)&data[1]);
-            break;
-
         default:
             break;
     }
 }
+
+static uint8_t inputsel = 0;
 
 /**
  * @brief Provides the input report data for transmission
@@ -467,85 +572,14 @@ void Charger_Periodic(void)
 {
     if (chrg_if->Base.Device->ConfigSelector != 0)
     {
-        chrg_input.battery.mV = (uint16_t)Charger_GetVoltage_mV();
-        chrg_input.battery.mA = (uint16_t)Charger_GetCurrent_mA();
-
-        /* If charging enabled, but no current */
-        if ((chrg_feature.charger.mA > 0) && (chrg_input.battery.mA == 0))
-        {
-            /* Disconnected charger voltage = 4.1V */
-            if ((chrg_input.battery.mV > 4100) && (chrg_input.battery.mV < 4170))
-            {
-                chrg_input.battery.present = 0;
-                chrg_input.battery.charged = 0;
-                chrg_input.battery.discharged = 0;
-                chrg_input.battery.overheat = 0;
-                chrg_input.battery.remcap = 0;
-            }
-            else /* Battery is connected, but charging is complete */
-            {
-                chrg_input.battery.present = 1;
-                chrg_input.battery.charged = 1;
-                chrg_input.battery.discharged = 0;
-                chrg_input.battery.overheat = 0;
-            }
-        }
-        else
-        {
-            chrg_input.battery.present = 1;
-            chrg_input.battery.charged = 0;
-
-            /* reduce charge current when overheated */
-            if ((Analog_GetValues()->temp_C > 50) &&
-                (chrg_feature.charger.mA >= 500) &&
-                (chrg_input.battery.mA > 300))
-            {
-                Charger_FtChargerType reduced;
-                reduced.mA = 100;
-                Charger_SetChargerReport(&reduced);
-
-                chrg_input.battery.discharged = 0;
-                chrg_input.battery.overheat = 1;
-            }
-            else if (chrg_input.battery.mV < LiDischarge_mV)
-            {
-                chrg_input.battery.discharged = 1;
-                chrg_input.battery.overheat = 0;
-            }
-            else
-            {
-                chrg_input.battery.discharged = 0;
-                chrg_input.battery.overheat = 0;
-            }
-        }
-
-        /* convert Vbat to remaining capacity */
-        if (chrg_input.battery.present != 0)
-        {
-            /* TODO Different characteristics apply for a charged battery
-             * than a discharged */
-            {
-                /* Simple linear approximation for now */
-                int remcap = (int)chrg_feature.battery.capacity *
-                ((int)chrg_input.battery.mV - (int)LiDischarge_mV) /
-                ((int)LiCharged_mV - (int)LiDischarge_mV);
-
-                chrg_input.battery.remcap = (uint16_t)remcap;
-            }
-        }
-
-        vout_input.output.mA = Analog_GetValues()->Iout_mA;
-
         /* Send report through IN pipe */
         if ((inputsel++ & 1) != 0)
         {
-            USBD_HID_ReportIn(chrg_if,
-                        (uint8_t*)&chrg_input, sizeof(chrg_input));
+            Charger_SendBatteryReport();
         }
         else
         {
-            USBD_HID_ReportIn(chrg_if,
-                        (uint8_t*)&vout_input, sizeof(vout_input));
+            Charger_SendOutputReport();
         }
     }
 }
