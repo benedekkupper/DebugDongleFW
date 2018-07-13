@@ -43,9 +43,9 @@
 
 #define TEMP_SCALER             100
 
-#define SENR_TEMP               1
-#define SENR_LIGHT              1
-#define SENR_VOLT               1
+#define SENR_TEMP
+#define SENR_LIGHT
+#define SENR_VOLT
 
 /** @brief HID report descriptor of sens_if */
 __ALIGN_BEGIN static const uint8_t SensorReport[] __ALIGN_END =
@@ -55,8 +55,6 @@ __ALIGN_BEGIN static const uint8_t SensorReport[] __ALIGN_END =
     HID_USAGE_PAGE_SENSOR,
     HID_USAGE_SENSOR_TYPE_COLLECTION,
     HID_COLLECTION_APPLICATION,
-
-        HID_USAGE_PAGE_SENSOR,
 
 #ifdef SENR_TEMP
         /* Temperature */
@@ -167,6 +165,7 @@ __ALIGN_BEGIN static const uint8_t SensorReport[] __ALIGN_END =
             HID_REPORT_SIZE(16),
             HID_REPORT_COUNT(1),
             HID_UNIT_EXPONENT(-2),
+            HID_UNIT_KELVIN,
             /* HID defined unit used */
             HID_INPUT(Data_Var_Abs),
 
@@ -299,42 +298,64 @@ typedef struct {
 
 /** @brief HID Feature report */
 struct {
+#ifdef SENR_TEMP
     struct {
         uint32_t interval;
         int16_t max;
         int16_t min;
     }temp;
+#endif
+#ifdef SENR_LIGHT
     struct {
         uint32_t interval;
         uint16_t max;
         uint16_t min;
     }illum;
+#endif
+#ifdef SENR_VOLT
     struct {
         uint32_t interval;
         uint16_t max;
         uint16_t min;
     }volt;
+#endif
 }__packed sens_feature = {
+#ifdef SENR_TEMP
     { REPORT_INTERVAL, 150 * TEMP_SCALER, -50 * TEMP_SCALER },
+#endif
+#ifdef SENR_LIGHT
     { REPORT_INTERVAL, 10000, 0 },
+#endif
+#ifdef SENR_VOLT
     { REPORT_INTERVAL, 10 * 1000, 0 },
+#endif
 };
 
 /**
  * @brief Sends the Feature report through the control EP.
+ * @param type: requested report's type
  * @param reportId: unused
  */
-static void Sensor_GetReport(uint8_t reportId)
+static void Sensor_GetReport(USBD_HID_ReportType type, uint8_t reportId)
 {
-    USBD_HID_ReportIn(sens_if, (uint8_t*)&sens_feature, sizeof(sens_feature));
+    if (type == HID_REPORT_INPUT)
+    {
+        /* Update IN report and send through Ctrl pipe */
+        Sensor_Periodic();
+    }
+    else
+    {
+        USBD_HID_ReportIn(sens_if, (uint8_t*)&sens_feature, sizeof(sens_feature));
+    }
 }
 
 /**
  * @brief Sets the new value of the Feature report based on the received data.
+ * @param type: report type (here always FEATURE)
  * @param data: the new report value to set
  * @param length: size of the report
  */
-static void Sensor_SetReport(uint8_t * data, uint16_t length)
+static void Sensor_SetReport(USBD_HID_ReportType type, uint8_t * data, uint16_t length)
 {
     memcpy((uint8_t*)&sens_feature, data, length);
 }
@@ -349,9 +370,15 @@ void Sensor_Periodic(void)
         Sensor_InReportType sens_input;
         const AnalogMeasurementsType * meas = Analog_GetValues();
 
+#ifdef SENR_TEMP
         sens_input.temp  = ( int16_t)meas->temp_C * TEMP_SCALER;
+#endif
+#ifdef SENR_LIGHT
         sens_input.illum = (uint16_t)meas->light_lx;
+#endif
+#ifdef SENR_VOLT
         sens_input.volt  = (uint16_t)meas->Vdd_mV;
+#endif
 
         USBD_HID_ReportIn(sens_if, (uint8_t*)&sens_input, sizeof(sens_input));
     }
