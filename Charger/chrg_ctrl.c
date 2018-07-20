@@ -24,6 +24,7 @@
 #include <bsp_io.h>
 
 static ChargeCurrentType currentLimit = Ichg_100mA;
+static ChargeCurrentType currentConfig = Ichg_0mA;
 
 static void Charger_onSwitchChange(uint32_t x);
 
@@ -37,10 +38,9 @@ void Charger_Init(void)
 
     /* TS default: drive 1 to enable charging */
     GPIO_vInitPin (CHARGER_CTRL_PIN, CHARGER_CTRL_CFG);
-    GPIO_vWritePin(CHARGER_CTRL_PIN, 1);
 
     /* ISET2 default: float to limit charging to 100mA */
-    GPIO_vDeinitPin(CHARGER_CURRENT_PIN);
+    Charger_SetCurrent(Ichg_100mA);
 
     /* nCHG default: use as input */
     GPIO_vInitPin (CHARGER_STATUS_PIN, CHARGER_STATUS_CFG);
@@ -189,6 +189,7 @@ void Charger_SetCurrent(ChargeCurrentType CurrentLevel)
             GPIO_vWritePin(CHARGER_CURRENT_PIN, 0);
             break;
     }
+    currentConfig = CurrentLevel;
 }
 
 /**
@@ -253,4 +254,22 @@ OutputVoltageType Output_GetVoltage(void)
 boolean_t Charger_UsbPowerPresent(void)
 {
     return !GPIO_eReadPin(USB_PWR_PIN);
+}
+
+/**
+ * @brief Disable power outputs.
+ */
+void Charger_Suspend(void)
+{
+    GPIO_vWritePin (CHARGER_CTRL_PIN, 0);
+    Charger_ClearConfig();
+}
+
+/**
+ * @brief Restore power outputs to their active state.
+ */
+void Charger_Resume(void)
+{
+    Charger_SetCurrent(currentConfig);
+    Charger_SetConfig();
 }

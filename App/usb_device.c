@@ -20,6 +20,7 @@
   * See the License for the specific language governing permissions and
   * limitations under the License.
   */
+#include <xpd_pwr.h>
 #include <usbd.h>
 
 #include <vcp_if.h>
@@ -54,6 +55,24 @@ const USBD_DescriptionType hdev_cfg = {
 
 /** @brief USB device handle */
 USBD_HandleType hUsbDevice, *const UsbDevice = &hUsbDevice;
+
+/**
+ * @brief Disables output paths and enters low power mode.
+ * @param devHandle
+ */
+static void usbSuspendCallback(void * devHandle)
+{
+    Charger_Suspend();
+}
+
+/**
+ * @brief Restores run mode and enables output paths.
+ * @param devHandle
+ */
+static void usbResumeCallback(void * devHandle)
+{
+    Charger_Resume();
+}
 
 /**
  * @brief This function handles the setup of the USB device:
@@ -100,6 +119,8 @@ void UsbDevice_Init(void)
             USBD_HID_MountInterface(chrg_if, UsbDevice);
             USBD_HID_MountInterface(sens_if, UsbDevice);
 
+            UsbDevice->Callbacks.Suspend = usbSuspendCallback;
+            UsbDevice->Callbacks.Resume = usbResumeCallback;
             /* After charger detection the device connection can be made */
             USBD_Connect(UsbDevice);
             break;
