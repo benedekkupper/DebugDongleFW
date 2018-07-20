@@ -313,6 +313,7 @@ static void Charger_SetOutReport(Charger_FtOutType *report)
     /* output voltage change:
      * 5V if voltage is higher than 4.5V
      * and Buck converter is disabled on output */
+#if (HW_REV > 0xA)
     if (report->out.used == 0)
     {
         Output_SetVoltage(Vout_off);
@@ -320,7 +321,9 @@ static void Charger_SetOutReport(Charger_FtOutType *report)
         chrg_ftOut.out.buck = 0;
         chrg_ftOut.out.used = 0;
     }
-    else if ((report->out.mV > 4500) && (report->out.buck == 0))
+    else
+#endif
+    if ((report->out.mV > 4500) && (report->out.buck == 0))
     {
         Output_SetVoltage(Vout_5V);
         chrg_ftOut.out.mV = 5000;
@@ -524,11 +527,14 @@ static void Charger_GetReport(USBD_HID_ReportType type, uint8_t reportId)
         {
             OutputVoltageType conf = Output_GetVoltage();
 
+#if (HW_REV > 0xA)
             if (conf == Vout_off)
             {
                 /* Not possible to set with switch, values are set */
             }
-            else if (conf == Vout_5V)
+            else
+#endif
+            if (conf == Vout_5V)
             {
                 chrg_ftOut.out.buck = 0;
                 chrg_ftOut.out.mV = 5000;
@@ -563,8 +569,6 @@ static void Charger_GetReport(USBD_HID_ReportType type, uint8_t reportId)
     }
 }
 
-static uint8_t inputsel = 0;
-
 /**
  * @brief Provides the input report data for transmission
  */
@@ -573,13 +577,16 @@ void Charger_Periodic(void)
     if (chrg_if->Base.Device->ConfigSelector != 0)
     {
         /* Send report through IN pipe */
+#if (HW_REV > 0xA)
+        static uint8_t inputsel = 0;
         if ((inputsel++ & 1) != 0)
         {
-            Charger_SendBatteryReport();
+            Charger_SendOutputReport();
         }
         else
+#endif
         {
-            Charger_SendOutputReport();
+            Charger_SendBatteryReport();
         }
     }
 }

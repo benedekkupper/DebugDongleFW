@@ -42,9 +42,13 @@ static const ADC_InitType adcSettings =
 /* On STM32F0 channel order is according to the channel number */
 typedef enum
 {
+#if (HW_REV > 0xA)
     ADCH_IOUT = 0,
-    ADCH_VBAT,
     ADCH_LIGHT_SENSOR,
+#else
+    ADCH_LIGHT_SENSOR = 0,
+    ADCH_VBAT,
+#endif
     ADCH_ICHARGE,
     ADCH_TEMP,
     ADCH_VREFINT,
@@ -54,10 +58,12 @@ typedef enum
 /** @brief ADC channels configuration */
 static const ADC_ChannelInitType adcChannels[] =
 {
+#if (HW_REV > 0xA)
     {
         .Number     = IOUT_CH,
         .SampleTime = ADC_SAMPLETIME_239p5
     },
+#endif
     {
         .Number     = VBAT_CH,
         .SampleTime = ADC_SAMPLETIME_239p5
@@ -80,7 +86,6 @@ static const ADC_ChannelInitType adcChannels[] =
     },
 };
 
-static uint8_t iout_disabled = 0;
 static uint16_t conversions[ADCH_COUNT];
 static AnalogMeasurementsType measurements;
 
@@ -113,8 +118,10 @@ static void analogConvertMeasured(void * handle)
     /* lx = (Vmeas / R=10K) * 500 / 300 */
     measurements.light_lx = ADC_lCalcExt_mV(conversions[ADCH_LIGHT_SENSOR]) * 5 / 30;
 
+#if (HW_REV > 0xA)
     /*  I = Vmeas / (R=1K * k=1/1000) */
     measurements.Iout_mA  = ADC_lCalcExt_mV(conversions[ADCH_IOUT]);
+#endif
 }
 
 /**
@@ -158,12 +165,14 @@ void Analog_Deinit(void)
     ADC_vDeinit(adc);
 }
 
+#if (HW_REV > 0xA)
 /**
  * @brief Enables or disables measurement of the output current channel.
  * @param Enabled: the new setting
  */
 void Analog_IoutConfig(int Enabled)
 {
+    uint8_t iout_disabled;
     ADC_vStop_DMA(adc);
 
     if (Enabled)
@@ -182,6 +191,7 @@ void Analog_IoutConfig(int Enabled)
 
     ADC_eStart_DMA(adc, &conversions[iout_disabled]);
 }
+#endif
 
 /**
  * @brief Halts measurements.

@@ -76,9 +76,9 @@ const GPIO_InitType BSP_IOCfg[] =
     },
 };
 
-void EXTI0_1_IRQHandler(void);
+HANDLER(VOUT_SELECT);
 
-void EXTI0_1_IRQHandler(void)
+HANDLER(VOUT_SELECT)
 {
     EXTI_vIRQHandler(VOUT_SELECT_LINE);
 }

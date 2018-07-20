@@ -41,7 +41,9 @@ typedef enum
 
 typedef enum
 {
+#if (HW_REV > 0xA)
     Vout_off = 0,
+#endif
     Vout_3V3,
     Vout_5V,
 }OutputVoltageType;

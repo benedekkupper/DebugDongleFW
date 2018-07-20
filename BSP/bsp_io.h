@@ -31,21 +31,33 @@ extern "C"
 #include <xpd_gpio.h>
 
 /* ADC channels */
+#if (HW_REV > 0xA)
 #define IOUT_CH             1
-#define VBAT_CH             4
 #define LIGHT_SENSOR_CH     7
+#else
+#define LIGHT_SENSOR_CH     1
+#endif
+#define VBAT_CH             4
 #define ICHARGE_CH          9
 
 /* GPIO pins */
+#if (HW_REV > 0xA)
 #define IOUT_PIN            GPIOA, 1
 #define LIGHT_SENSOR_PIN    GPIOA, 7
+#else
+#define LIGHT_SENSOR_PIN    GPIOA, 1
+#endif
 #define VBAT_PIN            GPIOA, 4
 #define ICHARGE_PIN         GPIOB, 1
+#if (HW_REV > 0xA)
 #define IOUT_CFG            (&BSP_IOCfg[0])
+#endif
 #define LIGHT_SENSOR_CFG    (&BSP_IOCfg[0])
 #define VBAT_CFG            (&BSP_IOCfg[0])
 #define ICHARGE_CFG         (&BSP_IOCfg[0])
+#if (HW_REV > 0xA)
 #define IOUT_CTRL_CFG       (&BSP_IOCfg[3])
+#endif
 
 #define CHARGER_CURRENT_PIN GPIOA, 6
 #define CHARGER_CURRENT_CFG (&BSP_IOCfg[3])
@@ -58,10 +70,21 @@ extern "C"
 
 #define VOUT_SELECT_PIN     GPIOF, 0
 #define VOUT_SELECT_OUT_CFG (&BSP_IOCfg[3])
+
 /* EXTI mode */
-#define VOUT_SELECT_IN_CFG  (&BSP_IOCfg[2])
-#define VOUT_SELECT_IRQN    EXTI0_1_IRQn
+#if (HW_REV > 0xA)
+#define VOUT_SELECT         EXTI0_1_IRQ
 #define VOUT_SELECT_LINE    0
+#define VOUT_SELECT_IN_CFG  (&BSP_IOCfg[2])
+#else
+#define VOUT_SELECT         EXTI4_15_IRQ
+#define VOUT_SELECT_LINE    7
+#define MODE_SWITCH_PIN     GPIOA, 7
+#define MODE_SWITCH_CFG     (&BSP_IOCfg[2])
+#endif
+#define _CONCAT(A,B)        A##B
+#define IRQN(LINE)          (_CONCAT(LINE,n))
+#define HANDLER(LINE)       void _CONCAT(LINE,Handler)(void)
 
 #define CHARGER_STATUS_PIN  GPIOA, 5
 #define CHARGER_STATUS_CFG  (&BSP_IOCfg[1])

@@ -49,10 +49,17 @@ void Charger_Init(void)
     GPIO_vInitPin (USER_LED_PIN, USER_LED_CFG);
     GPIO_vWritePin(USER_LED_PIN, 1);
 
+#if (HW_REV > 0xA)
     /* Vout default: input */
     GPIO_vInitPin (VOUT_SELECT_PIN, VOUT_SELECT_IN_CFG);
+#else
+    /* Switch controls Vout as long as USB is not configured */
+    GPIO_vInitPin (MODE_SWITCH_PIN, MODE_SWITCH_CFG);
+#endif
     GPIO_xPinCallbacks[VOUT_SELECT_LINE] = Charger_onSwitchChange;
-    NVIC_EnableIRQ(VOUT_SELECT_IRQN);
+    NVIC_EnableIRQ(IRQN(VOUT_SELECT));
+
+    /* Apply switch configuration now */
     Charger_onSwitchChange(VOUT_SELECT_LINE);
 }
 
@@ -103,6 +110,9 @@ void Charger_SetConfig(void)
         currentLimit = Ichg_500mA;
     }
     Analog_Resume();
+#if (HW_REV == 0xA)
+    NVIC_DisableIRQ(IRQN(VOUT_SELECT));
+#endif
 }
 
 /**
@@ -113,9 +123,11 @@ void Charger_SetConfig(void)
 void Charger_ClearConfig(void)
 {
     Analog_Halt();
+#if (HW_REV > 0xA)
     Analog_IoutConfig(ENABLE);
     GPIO_vInitPin (VOUT_SELECT_PIN, VOUT_SELECT_IN_CFG);
-    NVIC_EnableIRQ(VOUT_SELECT_IRQN);
+#endif
+    NVIC_EnableIRQ(IRQN(VOUT_SELECT));
 }
 
 /**
@@ -185,7 +197,8 @@ void Charger_SetCurrent(ChargeCurrentType CurrentLevel)
  */
 void Output_SetVoltage(OutputVoltageType Voltage)
 {
-    NVIC_DisableIRQ(VOUT_SELECT_IRQN);
+#if (HW_REV > 0xA)
+    NVIC_DisableIRQ(IRQN(VOUT_SELECT));
 
     if (Voltage != Vout_off)
     {
@@ -198,9 +211,14 @@ void Output_SetVoltage(OutputVoltageType Voltage)
     else
     {
         Analog_IoutConfig(DISABLE);
+        GPIO_vWritePin(USER_LED_PIN, 1);
         GPIO_vInitPin (IOUT_PIN, IOUT_CTRL_CFG);
         GPIO_vWritePin(IOUT_PIN, 1);
     }
+#else
+    GPIO_vWritePin(USER_LED_PIN, 1 - Voltage);
+    GPIO_vWritePin(VOUT_SELECT_PIN, Voltage);
+#endif
 }
 
 /**
@@ -210,11 +228,14 @@ void Output_SetVoltage(OutputVoltageType Voltage)
 OutputVoltageType Output_GetVoltage(void)
 {
     OutputVoltageType Voltage;
+#if (HW_REV > 0xA)
     if (GPIO_eReadPin(IOUT_PIN))
     {
         Voltage = Vout_off;
     }
-    else if (GPIO_eReadPin(IOUT_PIN))
+    else
+#endif
+    if (GPIO_eReadPin(VOUT_SELECT_PIN))
     {
         Voltage = Vout_5V;
     }
