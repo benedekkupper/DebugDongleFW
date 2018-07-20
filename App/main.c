@@ -35,21 +35,13 @@
 #include <sens_if.h>
 #include <vcp_if.h>
 
-uint32_t msCounter = 0;
-
 /* Lightweight periodic scheduler */
 void SysTick_Handler(void)
 {
     {
         VCP_Periodic();
-
-        /* every 10 ms */
-        if (++msCounter >= 10)
-        {
-            Sensor_Periodic();
-            Charger_Periodic();
-            msCounter = 0;
-        }
+        Sensor_Periodic();
+        Charger_Periodic();
     }
 }
 

@@ -39,7 +39,7 @@
 #include <hid_usage_sensor.h>
 #include <string.h>
 
-#define REPORT_INTERVAL         10
+#define REPORT_INTERVAL         100
 
 #define TEMP_SCALER             100
 
@@ -332,6 +332,26 @@ struct {
 };
 
 /**
+ * @brief Sends the IN report
+ */
+static void Sensor_SendInput(void)
+{
+    Sensor_InReportType sens_input;
+    const AnalogMeasurementsType * meas = Analog_GetValues();
+
+#ifdef SENR_TEMP
+    sens_input.temp  = ( int16_t)meas->temp_C * TEMP_SCALER;
+#endif
+#ifdef SENR_LIGHT
+    sens_input.illum = (uint16_t)meas->light_lx;
+#endif
+#ifdef SENR_VOLT
+    sens_input.volt  = (uint16_t)meas->Vdd_mV;
+#endif
+
+    USBD_HID_ReportIn(sens_if, (uint8_t*)&sens_input, sizeof(sens_input));
+}
+/**
  * @brief Sends the Feature report through the control EP.
  * @param type: requested report's type
  * @param reportId: unused
@@ -341,7 +361,7 @@ static void Sensor_GetReport(USBD_HID_ReportType type, uint8_t reportId)
     if (type == HID_REPORT_INPUT)
     {
         /* Update IN report and send through Ctrl pipe */
-        Sensor_Periodic();
+        Sensor_SendInput();
     }
     else
     {
@@ -367,20 +387,13 @@ void Sensor_Periodic(void)
 {
     if (sens_if->Base.Device->ConfigSelector != 0)
     {
-        Sensor_InReportType sens_input;
-        const AnalogMeasurementsType * meas = Analog_GetValues();
+        static uint8_t msCounter = 0;
 
-#ifdef SENR_TEMP
-        sens_input.temp  = ( int16_t)meas->temp_C * TEMP_SCALER;
-#endif
-#ifdef SENR_LIGHT
-        sens_input.illum = (uint16_t)meas->light_lx;
-#endif
-#ifdef SENR_VOLT
-        sens_input.volt  = (uint16_t)meas->Vdd_mV;
-#endif
-
-        USBD_HID_ReportIn(sens_if, (uint8_t*)&sens_input, sizeof(sens_input));
+        if (++msCounter >= REPORT_INTERVAL)
+        {
+            Sensor_SendInput();
+            msCounter = 0;
+        }
     }
 }
 

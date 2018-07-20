@@ -37,6 +37,8 @@
 #include <chrg_if.h>
 #include <hid_usage_power.h>
 
+#define REPORT_INTERVAL         100
+
 static const uint16_t LiCharged_mV = 4200;
 static const uint16_t LiDischarge_mV = 2900;
 
@@ -576,17 +578,23 @@ void Charger_Periodic(void)
 {
     if (chrg_if->Base.Device->ConfigSelector != 0)
     {
-        /* Send report through IN pipe */
+        static uint8_t msCounter = 0;
+
+        if (++msCounter >= REPORT_INTERVAL)
+        {
+            /* Send report through IN pipe */
 #if (HW_REV > 0xA)
-        static uint8_t inputsel = 0;
-        if ((inputsel++ & 1) != 0)
-        {
-            Charger_SendOutputReport();
-        }
-        else
+            static uint8_t inputsel = 0;
+            if ((inputsel++ & 1) != 0)
+            {
+                Charger_SendOutputReport();
+            }
+            else
 #endif
-        {
-            Charger_SendBatteryReport();
+            {
+                Charger_SendBatteryReport();
+            }
+            msCounter = 0;
         }
     }
 }
@@ -611,5 +619,5 @@ USBD_HID_IfHandleType hchrg_if = {
     .App = &chrgApp,
     .Base.AltCount = 1,
     .Config.InEp.Size       = sizeof(chrg_input),
-    .Config.InEp.Interval   = 10,
+    .Config.InEp.Interval   = REPORT_INTERVAL,
 }, *const chrg_if = &hchrg_if;
