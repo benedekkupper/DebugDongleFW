@@ -53,6 +53,8 @@ void Charger_Init(void)
     /* Vout default: input */
     GPIO_vInitPin (VOUT_SELECT_PIN, VOUT_SELECT_IN_CFG);
 #else
+    GPIO_vInitPin (VOUT_SELECT_PIN, VOUT_SELECT_OUT_CFG);
+
     /* Switch controls Vout as long as USB is not configured */
     GPIO_vInitPin (MODE_SWITCH_PIN, MODE_SWITCH_CFG);
 #endif
@@ -69,7 +71,11 @@ void Charger_Init(void)
  */
 static void Charger_onSwitchChange(uint32_t x)
 {
+#if (HW_REV > 0xA)
     GPIO_vWritePin(USER_LED_PIN, GPIO_eReadPin(VOUT_SELECT_PIN));
+#else
+    GPIO_vWritePin(USER_LED_PIN, GPIO_eReadPin(MODE_SWITCH_PIN));
+#endif
 }
 
 /**
