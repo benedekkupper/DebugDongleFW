@@ -70,9 +70,8 @@ struct {
     uint16_t Index;
 }VCP_Memory;
 
-static void VCP_Init(void);
-static void VCP_Deinit(void);
-static void VCP_USB_Control(USB_SetupRequestType * req, uint8_t* pbuf);
+static void VCP_Open(USBD_CDC_LineCodingType * line);
+static void VCP_Close(void);
 static void VCP_USB_ReceiveNew(uint8_t* pbuf, uint16_t length);
 static void VCP_USB_TransmitNew(uint8_t* pbuf, uint16_t length);
 
@@ -81,9 +80,8 @@ static void VCP_UART_Transmitted(void * handle);
 const USBD_CDC_AppType vcpApp =
 {
     .Name           = "VCP Interface",
-    .Init           = VCP_Init,
-    .Deinit         = VCP_Deinit,
-    .Control        = VCP_USB_Control,
+    .Open           = VCP_Open,
+    .Close          = VCP_Close,
     .Received       = VCP_USB_ReceiveNew,
     .Transmitted    = VCP_USB_TransmitNew,
 };
@@ -95,9 +93,37 @@ USBD_CDC_IfHandleType hvcp_if = {
 
 /**
  * @brief  This function sets up the bidirectional USB-UART communication.
+ * @param  line: serial port line coding parameters
  */
-static void VCP_Init(void)
+static void VCP_Open(USBD_CDC_LineCodingType * line)
 {
+    SerialConfig.Baudrate = line->DTERate;
+    SerialConfig.DataSize = line->DataBits;
+
+    /* set the Stop bit */
+    if (line->CharFormat == 2)
+    {
+        SerialConfig.StopBits = USART_STOPBITS_2;
+    }
+    else
+    {
+        SerialConfig.StopBits = USART_STOPBITS_1;
+    }
+
+    /* set the parity bit */
+    switch (line->ParityType)
+    {
+        case 1:
+            SerialConfig.Parity = USART_PARITY_ODD;
+            break;
+        case 2:
+            SerialConfig.Parity = USART_PARITY_EVEN;
+            break;
+        default:
+            SerialConfig.Parity = USART_PARITY_NONE;
+            break;
+    }
+
     /* Initialize UART with the current configuration, reset DMAs */
     USART_vInitAsync(vcp_uart, &SerialConfig);
     DMA_vStop(vcp_uart->DMA.Transmit);
@@ -120,71 +146,9 @@ static void VCP_Init(void)
 /**
  * @brief  This function shuts down the UART subsystem.
  */
-static void VCP_Deinit(void)
+static void VCP_Close(void)
 {
     USART_vDeinit(vcp_uart);
-}
-
-/**
- * @brief  Manage the CDC class requests
- * @param  req: Setup request
- * @param  pbuf: Buffer containing command data (request parameters)
- */
-static void VCP_USB_Control(USB_SetupRequestType * req, uint8_t* pbuf)
-{
-    switch (req->Request)
-    {
-        /* Sets the UART configuration */
-        case CDC_REQ_SET_LINE_CODING:
-        {
-            USBD_CDC_LineCodingType* line = (USBD_CDC_LineCodingType*)pbuf;
-
-            SerialConfig.Baudrate = line->DTERate;
-            SerialConfig.DataSize = line->DataBits;
-
-            /* set the Stop bit */
-            if (line->CharFormat == 2)
-            {
-                SerialConfig.StopBits = USART_STOPBITS_2;
-            }
-            else
-            {
-                SerialConfig.StopBits = USART_STOPBITS_1;
-            }
-
-            /* set the parity bit */
-            switch (line->ParityType)
-            {
-                case 1:
-                    SerialConfig.Parity = USART_PARITY_ODD;
-                    break;
-                case 2:
-                    SerialConfig.Parity = USART_PARITY_EVEN;
-                    break;
-                default:
-                    SerialConfig.Parity = USART_PARITY_NONE;
-                    break;
-            }
-            VCP_Init();
-            break;
-        }
-
-        /* Returns the current UART configuration */
-        case CDC_REQ_GET_LINE_CODING:
-        {
-            USBD_CDC_LineCodingType* line = (USBD_CDC_LineCodingType*)pbuf;
-
-            line->DTERate    = SerialConfig.Baudrate;
-            line->CharFormat = SerialConfig.StopBits;
-            line->DataBits   = SerialConfig.DataSize;
-            line->ParityType = (SerialConfig.Parity == USART_PARITY_ODD) ?
-                    1 : SerialConfig.Parity;
-            break;
-        }
-
-        default:
-            break;
-    }
 }
 
 /**
@@ -274,7 +238,7 @@ static void VCP_USB_TransmitNew(uint8_t * pbuf, uint16_t length)
  */
 void VCP_Periodic(void)
 {
-    if (vcp_if->Base.Device->ConfigSelector != 0)
+    if (vcp_if->LineCoding.DataBits != 0)
     {
         /* Transmit the received UART data periodically */
         VCP_USB_TransmitNew(NULL, 0);
