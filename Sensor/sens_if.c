@@ -416,7 +416,7 @@ USBD_HID_IfHandleType hsens_if = {
     .App = &sensApp,
     .Base.AltCount = 1,
     .Config.InEp.Size = sizeof(Sensor_InReportType),
-    .Config.InEp.Interval = REPORT_INTERVAL,
+    .Config.InEp.Interval_ms = REPORT_INTERVAL,
 }, *const sens_if = &hsens_if;
 
 
