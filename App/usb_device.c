@@ -37,14 +37,16 @@ USBD_DFU_IfHandleType *const dfu_if = &hdfu_if;
 const USBD_DescriptionType hdev_cfg = {
     .Vendor = {
         .Name           = "IntergatedCircuits",
-        .ID             = 0xffff, /* TODO placeholder */
+        .ID             = USBD_VID,
     },
     .Product = {
         .Name           = "DebugDongle",
-        .ID             = 0xffff, /* TODO placeholder */
+        .ID             = USBD_PID,
         .Version.bcd    = 0x0100 | HW_REV,
     },
+#if (USBD_SERIAL_BCD_SIZE > 0)
     .SerialNumber       = (USBD_SerialNumberType*)DEVICE_ID_REG,
+#endif
     .Config = {
         .Name           = "DebugDongle",
         .MaxCurrent_mA  = 500,

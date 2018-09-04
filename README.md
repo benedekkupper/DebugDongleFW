@@ -1,4 +1,4 @@
-# DebugDongle
+# DebugDongle [![Build Status](https://travis-ci.org/IntergatedCircuits/DebugDongleFW.svg?branch=master)](https://travis-ci.org/IntergatedCircuits/DebugDongleFW)
 
 This repository contains the embedded firmware of the DebugDongle,
 a USB power supply and serial port for prototype debugging. 
@@ -18,18 +18,22 @@ and ambient illuminance measurements.
 can use the same interface in application mode to send the device to update mode.
 
 ## Target hardware
-The firmware is written for an [STM32F042F6](http://www.st.com/en/microcontrollers/stm32f042f6.html) 
+The firmware is written for an [STM32F042F6][STM32F042F6]
 device (TSSOP-20 package, 32kB flash, 6kB SRAM, 48MHz clock).
 By changing the BSP layer it is possible to port the application to any STM32 device
 which is supported by *STM32_XPD*.
 
 ## External dependencies
 
-This firmware relies on the following external sources:
-1. The **CMSIS** and **STM32F0_XPD** libraries are imported from [STM32_XPD](https://github.com/IntergatedCircuits/STM32_XPD)
-2. The USB device library (including CDC, HID and DFU classes) are imported from [USBDevice](https://github.com/IntergatedCircuits/USBDevice)
-3. The [DFU bootloader](https://github.com/IntergatedCircuits/DfuBootloader)  is 
-used with the following parameters:
-`FLASH_APP_ADDRESS=0x08002000, FLASH_APP_SIZE=24568, BSP=STM32F0x2, FLASH_BYTE_PROGRAM_TIME_us=30, FLASH_TOTAL_ERASE_TIME_ms=480, USBD_VID=0xFFFF, USBD_PID=0xFFFF, VDD_VALUE_mV=3300, core=cm0`
+This firmware uses [DFU bootloader][DfuBootloader],
+which is built for this target with the following parameters:
+
+`TARGET_HEADER="\<stm32f040x6.h\>" SERIES=STM32F0 FLASH_APP_ADDRESS=0x08002000, FLASH_APP_SIZE=24*1024, FLASH_TOTAL_ERASE_TIME_ms=480, USBD_VID=0xFFFF, USBD_PID=0xF042, VDD_VALUE_mV=3300`
+
+For a standalone operation the DFU interface must not be mounted on the application USB device,
+and the application flash offset has to be removed.
 
 Built with GCC ARM tools.
+
+[STM32F042F6]: http://www.st.com/en/microcontrollers/stm32f042f6.html
+[DfuBootloader]: https://github.com/IntergatedCircuits/DfuBootloader
