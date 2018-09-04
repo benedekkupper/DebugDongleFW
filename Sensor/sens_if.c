@@ -54,12 +54,12 @@ __ALIGN_BEGIN static const uint8_t SensorReport[] __ALIGN_END =
     /* Sensor usage page context */
     HID_USAGE_PAGE_SENSOR,
     HID_USAGE_SENSOR_TYPE_COLLECTION,
-    HID_COLLECTION_APPLICATION,
+    HID_COLLECTION_APPLICATION(
 
 #ifdef SENR_TEMP
         /* Temperature */
         HID_USAGE_SENSOR_TYPE_ENVIRONMENTAL_TEMPERATURE,
-        HID_COLLECTION_PHYSICAL,
+        HID_COLLECTION_PHYSICAL(
 
 #ifdef SENR_TEMP_REPSTATE
             /* Reporting state property */
@@ -169,13 +169,13 @@ __ALIGN_BEGIN static const uint8_t SensorReport[] __ALIGN_END =
             /* HID defined unit used */
             HID_INPUT(Data_Var_Abs),
 
-        HID_END_COLLECTION,
+        ),
 #endif /* SENR_TEMP */
 
 #ifdef SENR_LIGHT
         /* Ambient light */
         HID_USAGE_SENSOR_TYPE_LIGHT_AMBIENTLIGHT,
-        HID_COLLECTION_PHYSICAL,
+        HID_COLLECTION_PHYSICAL(
 
             /* Report interval property */
             HID_USAGE_SENSOR_PROPERTY_REPORT_INTERVAL,
@@ -218,13 +218,13 @@ __ALIGN_BEGIN static const uint8_t SensorReport[] __ALIGN_END =
             HID_UNIT_LUX,
             HID_INPUT(Data_Var_Abs),
 
-        HID_END_COLLECTION,
+        ),
 #endif /* SENR_LIGHT */
 
 #ifdef SENR_VOLT
         /* System voltage */
         HID_USAGE_SENSOR_TYPE_ELECTRICAL_VOLTAGE,
-        HID_COLLECTION_PHYSICAL,
+        HID_COLLECTION_PHYSICAL(
 
             /* Report interval property */
             HID_USAGE_SENSOR_PROPERTY_REPORT_INTERVAL,
@@ -267,10 +267,10 @@ __ALIGN_BEGIN static const uint8_t SensorReport[] __ALIGN_END =
             HID_UNIT_VOLT,
             HID_INPUT(Data_Var_Abs),
 
-        HID_END_COLLECTION,
+        ),
 #endif /* SENR_VOLT */
 
-    HID_END_COLLECTION,
+    ),
 #endif /* 1 */
 };
 

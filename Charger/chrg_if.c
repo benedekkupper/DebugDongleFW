@@ -48,11 +48,11 @@ __ALIGN_BEGIN static const uint8_t ChargerReport[] __ALIGN_END =
 #if 1
 HID_USAGE_PAGE_POWER_DEVICE,
     HID_USAGE_PS_UPS,
-    HID_COLLECTION_APPLICATION,
+    HID_COLLECTION_APPLICATION(
 
         /* USB input */
         HID_USAGE_PS_INPUT,
-        HID_COLLECTION_PHYSICAL,
+        HID_COLLECTION_PHYSICAL(
 
             HID_REPORT_ID(1),
 
@@ -68,17 +68,17 @@ HID_USAGE_PAGE_POWER_DEVICE,
 
             /* TODO Good, Overload */
 
-        HID_END_COLLECTION,
+        ),
 
         /* Power converter */
         HID_USAGE_PS_POWER_CONVERTER,
-        HID_COLLECTION_PHYSICAL,
+        HID_COLLECTION_PHYSICAL(
 
             HID_REPORT_ID(2),
 
             /* output */
             HID_USAGE_PS_OUTPUT,
-            HID_COLLECTION_PHYSICAL,
+            HID_COLLECTION_PHYSICAL(
 
                 /* output voltage */
                 HID_USAGE_PS_CONFIGVOLTAGE,
@@ -115,18 +115,18 @@ HID_USAGE_PAGE_POWER_DEVICE,
                 HID_UNIT_EXPONENT(-3),
                 HID_INPUT(Const_Var_Abs),
 
-            HID_END_COLLECTION,
+            ),
 
-        HID_END_COLLECTION,
+        ),
 
         /* TODO Power summary */
 
         /* Battery charging */
         HID_USAGE_PS_BATTERY_SYSTEM,
-        HID_COLLECTION_PHYSICAL,
+        HID_COLLECTION_PHYSICAL(
 
             HID_USAGE_PS_CHARGER,
-            HID_COLLECTION_PHYSICAL,
+            HID_COLLECTION_PHYSICAL(
 
                 HID_REPORT_ID(3),
 
@@ -140,10 +140,10 @@ HID_USAGE_PAGE_POWER_DEVICE,
                 HID_UNIT_EXPONENT(-3),
                 HID_FEATURE(Const_Var_Abs),
 
-            HID_END_COLLECTION,
+            ),
 
             HID_USAGE_PS_BATTERY,
-            HID_COLLECTION_PHYSICAL,
+            HID_COLLECTION_PHYSICAL(
 
                 HID_REPORT_ID(4),
 
@@ -205,11 +205,11 @@ HID_USAGE_PAGE_POWER_DEVICE,
                 HID_LOGICAL_MAX_8(1),
                 HID_INPUT(Const_Arr_Abs),
 
-            HID_END_COLLECTION,
+            ),
 
-        HID_END_COLLECTION,
+        ),
 
-    HID_END_COLLECTION,
+    ),
 #endif /* 1 */
 };
 
