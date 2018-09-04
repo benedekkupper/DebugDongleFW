@@ -47,8 +47,8 @@ typedef enum
     ADCH_LIGHT_SENSOR,
 #else
     ADCH_LIGHT_SENSOR = 0,
-    ADCH_VBAT,
 #endif
+    ADCH_VBAT,
     ADCH_ICHARGE,
     ADCH_TEMP,
     ADCH_VREFINT,
