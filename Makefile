@@ -1,6 +1,6 @@
-########+++++++++++++++++++++++++++++++++++++++########
-##++----  Makefile for DfuBootloader project   ----++##
-########+++++++++++++++++++++++++++++++++++++++########
+########+++++++++++++++++++++++++++++++++++++########
+##++----  Makefile for DebugDongle project   ----++##
+########+++++++++++++++++++++++++++++++++++++########
 
 # optimization
 OPT = -O3
@@ -15,7 +15,6 @@ BUILD_DIR = build_$(VID)_$(PID)
 
 CORE = m0
 SERIES = STM32F0
-DEVICE = STM32F042F6
 BSP = BSP
 
 C_DEFS =  \
@@ -65,10 +64,7 @@ C_INCLUDES =  \
 -ICharger \
 -ISensor \
 -IVCP \
--I$(USBD_DIR)/Device \
--I$(USBD_DIR)/Class/CDC \
--I$(USBD_DIR)/Class/DFU \
--I$(USBD_DIR)/Class/HID \
+-I$(USBD_DIR)/Include \
 -I$(USBD_DIR)/PDs/STM32_XPD \
 -I$(XPD_DIR)/CMSIS/Include \
 -I$(XPD_DIR)/CMSIS/Device/ST/$(SERIES)xx/Include \
@@ -81,10 +77,10 @@ $(wildcard App/*.c) \
 $(wildcard Charger/*.c) \
 $(wildcard Sensor/*.c) \
 $(wildcard VCP/*.c) \
-$(wildcard $(USBD_DIR)/Device/Src/*.c) \
-$(wildcard $(USBD_DIR)/Class/CDC/Src/*.c) \
-$(wildcard $(USBD_DIR)/Class/DFU/Src/*.c) \
-$(wildcard $(USBD_DIR)/Class/HID/Src/*.c) \
+$(wildcard $(USBD_DIR)/Device/*.c) \
+$(wildcard $(USBD_DIR)/Class/CDC/*.c) \
+$(wildcard $(USBD_DIR)/Class/DFU/*.c) \
+$(wildcard $(USBD_DIR)/Class/HID/*.c) \
 $(wildcard $(XPD_DIR)/$(SERIES)_XPD/src/*.c)
 
 # compiler flags

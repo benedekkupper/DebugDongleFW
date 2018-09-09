@@ -36,7 +36,7 @@
   */
 #include <sens_if.h>
 #include <analog.h>
-#include <hid_usage_sensor.h>
+#include <hid/usage_sensor.h>
 #include <string.h>
 
 #define REPORT_INTERVAL         100
@@ -353,10 +353,11 @@ static void Sensor_SendInput(void)
 }
 /**
  * @brief Sends the Feature report through the control EP.
+ * @param itf: callback sender interface
  * @param type: requested report's type
  * @param reportId: unused
  */
-static void Sensor_GetReport(USBD_HID_ReportType type, uint8_t reportId)
+static void Sensor_GetReport(void* itf, USBD_HID_ReportType type, uint8_t reportId)
 {
     if (type == HID_REPORT_INPUT)
     {
@@ -365,17 +366,18 @@ static void Sensor_GetReport(USBD_HID_ReportType type, uint8_t reportId)
     }
     else
     {
-        USBD_HID_ReportIn(sens_if, (uint8_t*)&sens_feature, sizeof(sens_feature));
+        USBD_HID_ReportIn(itf, (uint8_t*)&sens_feature, sizeof(sens_feature));
     }
 }
 
 /**
  * @brief Sets the new value of the Feature report based on the received data.
+ * @param itf: callback sender interface
  * @param type: report type (here always FEATURE)
  * @param data: the new report value to set
  * @param length: size of the report
  */
-static void Sensor_SetReport(USBD_HID_ReportType type, uint8_t * data, uint16_t length)
+static void Sensor_SetReport(void* itf, USBD_HID_ReportType type, uint8_t * data, uint16_t length)
 {
     memcpy((uint8_t*)&sens_feature, data, length);
 }

@@ -35,7 +35,7 @@
   * limitations under the License.
   */
 #include <chrg_if.h>
-#include <hid_usage_power.h>
+#include <hid/usage_power.h>
 
 #define REPORT_INTERVAL         100
 
@@ -382,11 +382,12 @@ static void Charger_SetBatteryReport(Charger_FtBatteryType *report)
 
 /**
  * @brief Sets the device configuration according to the received feature report.
+ * @param itf: callback sender interface
  * @param type: report type (here always FEATURE)
  * @param data: report data
  * @param length: total length of the report
  */
-static void Charger_SetReport(USBD_HID_ReportType type, uint8_t * data, uint16_t length)
+static void Charger_SetReport(void* itf, USBD_HID_ReportType type, uint8_t * data, uint16_t length)
 {
     /* First data element is the report ID */
     switch (data[0])
@@ -500,10 +501,11 @@ void Charger_SendBatteryReport(void)
 
 /**
  * @brief Returns a requested feature report (through the CTRL endpoint).
+ * @param itf: callback sender interface
  * @param type: requested report's type
  * @param reportId: The feature report's ID
  */
-static void Charger_GetReport(USBD_HID_ReportType type, uint8_t reportId)
+static void Charger_GetReport(void* itf, USBD_HID_ReportType type, uint8_t reportId)
 {
     if (type == HID_REPORT_INPUT) switch (reportId)
     {
@@ -520,7 +522,7 @@ static void Charger_GetReport(USBD_HID_ReportType type, uint8_t reportId)
     {
         case 1:
         {
-            USBD_HID_ReportIn(chrg_if,
+            USBD_HID_ReportIn(itf,
                     (uint8_t*)&chrg_ftUsb,
                     sizeof(chrg_ftUsb));
             break;
@@ -547,21 +549,21 @@ static void Charger_GetReport(USBD_HID_ReportType type, uint8_t reportId)
                 chrg_ftOut.out.mV = (uint16_t)Analog_GetValues()->Vdd_mV;
             }
 
-            USBD_HID_ReportIn(chrg_if,
+            USBD_HID_ReportIn(itf,
                     (uint8_t*)&chrg_ftOut,
                     sizeof(chrg_ftOut));
             break;
         }
         case 3:
         {
-            USBD_HID_ReportIn(chrg_if,
+            USBD_HID_ReportIn(itf,
                     (uint8_t*)&chrg_ftCharger,
                     sizeof(chrg_ftCharger));
             break;
         }
         case 4:
         {
-            USBD_HID_ReportIn(chrg_if,
+            USBD_HID_ReportIn(itf,
                     (uint8_t*)&chrg_ftBatt,
                     sizeof(chrg_ftBatt));
             break;

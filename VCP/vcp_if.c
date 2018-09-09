@@ -70,10 +70,10 @@ struct {
     uint16_t Index;
 }VCP_Memory;
 
-static void VCP_Open(USBD_CDC_LineCodingType * line);
-static void VCP_Close(void);
-static void VCP_USB_ReceiveNew(uint8_t* pbuf, uint16_t length);
-static void VCP_USB_TransmitNew(uint8_t* pbuf, uint16_t length);
+static void VCP_Open(void* itf, USBD_CDC_LineCodingType * line);
+static void VCP_Close(void* itf);
+static void VCP_USB_ReceiveNew(void* itf, uint8_t* pbuf, uint16_t length);
+static void VCP_USB_TransmitNew(void* itf, uint8_t* pbuf, uint16_t length);
 
 static void VCP_UART_Transmitted(void * handle);
 
@@ -93,9 +93,10 @@ USBD_CDC_IfHandleType hvcp_if = {
 
 /**
  * @brief  This function sets up the bidirectional USB-UART communication.
+ * @param  itf: callback sender interface
  * @param  line: serial port line coding parameters
  */
-static void VCP_Open(USBD_CDC_LineCodingType * line)
+static void VCP_Open(void* itf, USBD_CDC_LineCodingType * line)
 {
     SerialConfig.Baudrate = line->DTERate;
     SerialConfig.DataSize = line->DataBits;
@@ -135,7 +136,7 @@ static void VCP_Open(USBD_CDC_LineCodingType * line)
     /* Page 0 is initialized for OUT endpoint reception */
     VCP_Memory.OutStatus[0] = BUFFER_RECEIVING;
     VCP_Memory.OutStatus[1] = BUFFER_EMPTY;
-    (void) USBD_CDC_Receive(vcp_if, VCP_Memory.OutData[0], VCP_OUT_DATA_SIZE / 2);
+    (void) USBD_CDC_Receive(itf, VCP_Memory.OutData[0], VCP_OUT_DATA_SIZE / 2);
 
     /* Start circular buffer reception with DMA for IN endpoint */
     VCP_Memory.Index = 0;
@@ -145,18 +146,20 @@ static void VCP_Open(USBD_CDC_LineCodingType * line)
 
 /**
  * @brief  This function shuts down the UART subsystem.
+ * @param  itf: callback sender interface
  */
-static void VCP_Close(void)
+static void VCP_Close(void* itf)
 {
     USART_vDeinit(vcp_uart);
 }
 
 /**
  * @brief  Data received over USB OUT endpoint are sent over UART by this function.
+ * @param  itf: callback sender interface
  * @param  pbuf: Buffer of received data
  * @param  length: Number of data received (in bytes)
  */
-static void VCP_USB_ReceiveNew(uint8_t * pbuf, uint16_t length)
+static void VCP_USB_ReceiveNew(void* itf, uint8_t * pbuf, uint16_t length)
 {
     uint8_t page = (VCP_Memory.OutStatus[0] == BUFFER_RECEIVING) ? 0 : 1;
 
@@ -174,7 +177,7 @@ static void VCP_USB_ReceiveNew(uint8_t * pbuf, uint16_t length)
         (void) USART_eTransmit_DMA(vcp_uart, VCP_Memory.OutData[page], length);
 
         VCP_Memory.OutStatus[1 - page] = BUFFER_RECEIVING;
-        (void) USBD_CDC_Receive(vcp_if, VCP_Memory.OutData[1 - page], VCP_OUT_DATA_SIZE / 2);
+        (void) USBD_CDC_Receive(itf, VCP_Memory.OutData[1 - page], VCP_OUT_DATA_SIZE / 2);
     }
 }
 
@@ -195,7 +198,7 @@ static void VCP_UART_Transmitted(void * handle)
     {
         /* Switch pages, start transfer on both */
         VCP_Memory.OutStatus[1 - page] = BUFFER_TRANSMITTING;
-        (void) USART_eTransmit_DMA(vcp_uart, VCP_Memory.OutData[1 - page], VCP_Memory.OutLength);
+        (void) USART_eTransmit_DMA(handle, VCP_Memory.OutData[1 - page], VCP_Memory.OutLength);
 
         VCP_Memory.OutStatus[page] = BUFFER_RECEIVING;
         (void) USBD_CDC_Receive(vcp_if, VCP_Memory.OutData[page], VCP_OUT_DATA_SIZE / 2);
@@ -204,10 +207,11 @@ static void VCP_UART_Transmitted(void * handle)
 
 /**
  * @brief  This function transmits recently received UART data over USB.
+ * @param  itf: callback sender interface
  * @param  pbuf: unused
  * @param  length: unused
  */
-static void VCP_USB_TransmitNew(uint8_t * pbuf, uint16_t length)
+static void VCP_USB_TransmitNew(void* itf, uint8_t * pbuf, uint16_t length)
 {
     /* Determine the buffer index of the UART DMA */
     uint16_t rxIndex = VCP_IN_DATA_SIZE - DMA_usGetStatus(vcp_uart->DMA.Receive);
@@ -215,7 +219,7 @@ static void VCP_USB_TransmitNew(uint8_t * pbuf, uint16_t length)
     /* If the UART RX index is ahead, transmit the new data */
     if (VCP_Memory.Index < rxIndex)
     {
-        if(USBD_E_OK == USBD_CDC_Transmit(vcp_if,
+        if(USBD_E_OK == USBD_CDC_Transmit(itf,
                 &VCP_Memory.InData[VCP_Memory.Index], rxIndex - VCP_Memory.Index))
         {
             VCP_Memory.Index = rxIndex;
@@ -224,7 +228,7 @@ static void VCP_USB_TransmitNew(uint8_t * pbuf, uint16_t length)
     /* If the USB IN index is ahead, the buffer has wrapped, transmit until the end */
     else if (VCP_Memory.Index > rxIndex)
     {
-        if (USBD_E_OK == USBD_CDC_Transmit(vcp_if,
+        if (USBD_E_OK == USBD_CDC_Transmit(itf,
                 &VCP_Memory.InData[VCP_Memory.Index], VCP_IN_DATA_SIZE - VCP_Memory.Index))
         {
             VCP_Memory.Index = 0;
@@ -241,7 +245,7 @@ void VCP_Periodic(void)
     if (vcp_if->LineCoding.DataBits != 0)
     {
         /* Transmit the received UART data periodically */
-        VCP_USB_TransmitNew(NULL, 0);
+        VCP_USB_TransmitNew(vcp_if, NULL, 0);
     }
 }
 
