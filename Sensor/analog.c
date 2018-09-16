@@ -138,17 +138,18 @@ void Analog_Init(void)
 
     /* trigger timer settings */
     {
-        TIM_InitType stp;
-        TIM_MasterConfigType mstr;
+        TIM_MasterConfigType mstr = {
+            .MasterSlaveMode    = DISABLE,
+            .MasterTrigger      = TIM_TRGO_UPDATE,
+        };
+        TIM_InitType stp = {
+            .Mode               = TIM_COUNTER_UP,
+        };
         stp.Prescaler           = TIM_ulClockFreq_Hz(adTrg) / 1000; /* clock at 1 kHz */
         stp.Period              = 10; /* trigger with 100 Hz */
-        stp.Mode                = TIM_COUNTER_UP;
-        stp.ClockDivision       = CLK_DIV1;
-        stp.RepetitionCounter   = 0;
-        TIM_vInit(adTrg, &stp);
 
-        mstr.MasterSlaveMode    = DISABLE;
-        mstr.MasterTrigger      = TIM_TRGO_UPDATE;
+        TIM_vCounterInit(adTrg, &stp);
+
         TIM_vMasterConfig(adTrg, &mstr);
     }
 

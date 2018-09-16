@@ -605,8 +605,8 @@ void Charger_Periodic(void)
 const USBD_HID_AppType chrgApp =
 {
     .Name       = "Battery Charging Supervisor",
-    .Init       = Charger_SetConfig,
-    .Deinit     = Charger_ClearConfig,
+    .Init       = (void (*)(void*))Charger_SetConfig,
+    .Deinit     = (void (*)(void*))Charger_ClearConfig,
     .SetReport  = Charger_SetReport,
     .GetReport  = Charger_GetReport,
     .Report     = {

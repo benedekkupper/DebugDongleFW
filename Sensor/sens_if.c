@@ -403,8 +403,8 @@ void Sensor_Periodic(void)
 const USBD_HID_AppType sensApp =
 {
     .Name       = "DebugDongle Sensor Collection",
-    .Init       = Analog_Resume,
-    .Deinit     = Analog_Halt,
+    .Init       = (void (*)(void*))Analog_Resume,
+    .Deinit     = (void (*)(void*))Analog_Halt,
     .SetReport  = Sensor_SetReport,
     .GetReport  = Sensor_GetReport,
     .Report     = {
