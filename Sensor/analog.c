@@ -145,12 +145,13 @@ void Analog_Init(void)
         TIM_InitType stp = {
             .Mode               = TIM_COUNTER_UP,
         };
-        stp.Prescaler           = TIM_ulClockFreq_Hz(adTrg) / 1000; /* clock at 1 kHz */
-        stp.Period              = 10; /* trigger with 100 Hz */
+        /* clock at 1 kHz, update with 100 Hz */
+        stp.Prescaler           = TIM_ulClockFreq_Hz(adc->Trigger) / 1000;
+        stp.Period              = 10;
 
-        TIM_vCounterInit(adTrg, &stp);
+        TIM_vCounterInit(adc->Trigger, &stp);
 
-        TIM_vMasterConfig(adTrg, &mstr);
+        TIM_vMasterConfig(adc->Trigger, &mstr);
     }
 
     /* Actual conversions only start by the trigger */
@@ -162,7 +163,7 @@ void Analog_Init(void)
  */
 void Analog_Deinit(void)
 {
-    TIM_vDeinit(adTrg);
+    TIM_vDeinit(adc->Trigger);
     ADC_vDeinit(adc);
 }
 
@@ -199,7 +200,7 @@ void Analog_IoutConfig(int Enabled)
  */
 void Analog_Halt(void)
 {
-    TIM_vCounterStop(adTrg);
+    TIM_vCounterStop(adc->Trigger);
 }
 
 /**
@@ -207,5 +208,5 @@ void Analog_Halt(void)
  */
 void Analog_Resume(void)
 {
-    TIM_vCounterStart(adTrg);
+    TIM_vCounterStart(adc->Trigger);
 }

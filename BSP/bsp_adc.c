@@ -23,9 +23,9 @@
 #include <bsp_adc.h>
 #include <xpd_nvic.h>
 
-DMA_HandleType hdmaadc, *const dmaadc = &hdmaadc;
+static DMA_HandleType hdmaadc, *const dmaadc = &hdmaadc;
 
-TIM_HandleType hadTrg, *const adTrg = &hadTrg;
+static TIM_HandleType hadTrg, *const adTrg = &hadTrg;
 
 ADC_HandleType hadc, *const adc = &hadc;
 
@@ -62,11 +62,11 @@ static void adcinit(void * handle)
 
 static void adcdeinit(void * handle)
 {
-    TIM_vCounterStop(adTrg);
-
     DMA_vDeinit(dmaadc);
     NVIC_DisableIRQ(DMA1_Channel1_IRQn);
 }
+
+void DMA1_Channel1_IRQHandler(void);
 
 void DMA1_Channel1_IRQHandler(void)
 {
@@ -79,6 +79,7 @@ void BSP_ADC_Bind(void)
     adc->Callbacks.DepInit = adcinit;
     adc->Callbacks.DepDeinit = adcdeinit;
     adc->DMA.Conversion = dmaadc;
+    adc->Trigger = adTrg;
 
     DMA_INST2HANDLE(dmaadc, DMA1_Channel1);
     TIM_INST2HANDLE(adTrg, TIM3);

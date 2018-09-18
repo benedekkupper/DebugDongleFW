@@ -34,8 +34,6 @@ extern "C"
 
 #define ADC_TRIGGER_SRC     ADC_TRIGGER_TIM3_TRGO
 
-extern TIM_HandleType *const adTrg;
-
 extern ADC_HandleType *const adc;
 
 void BSP_ADC_Bind(void);
