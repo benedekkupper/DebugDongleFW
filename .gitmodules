@@ -4,3 +4,6 @@
 [submodule "STM32_XPD"]
 	path = STM32_XPD
 	url = https://github.com/IntergatedCircuits/STM32_XPD
+[submodule "HidReportDef"]
+	path = HidReportDef
+	url = https://github.com/IntergatedCircuits/HidReportDef
