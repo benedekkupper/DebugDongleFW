@@ -55,6 +55,7 @@ C_STANDARD = -std=gnu11
 
 XPD_DIR = STM32_XPD
 USBD_DIR = USBDevice
+HID_DIR = HidReportDef
 
 # All USBDevice classes are built, but only DFU is used
 # C includes
@@ -64,6 +65,7 @@ C_INCLUDES =  \
 -ICharger \
 -ISensor \
 -IVCP \
+-I$(HID_DIR)/include \
 -I$(USBD_DIR)/Include \
 -I$(USBD_DIR)/PDs/STM32_XPD \
 -I$(XPD_DIR)/CMSIS/Include \
