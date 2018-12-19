@@ -48,7 +48,8 @@
 #define SENR_VOLT
 
 /** @brief HID report descriptor of sens_if */
-__ALIGN_BEGIN static const uint8_t SensorReport[] __ALIGN_END =
+__alignment(USBD_DATA_ALIGNMENT)
+static const uint8_t SensorReport[] __align(USBD_DATA_ALIGNMENT) =
 {
 #if 1
     /* Sensor usage page context */
@@ -319,7 +320,7 @@ struct {
         uint16_t min;
     }volt;
 #endif
-}__packed sens_feature = {
+}__packed sens_feature __align(USBD_DATA_ALIGNMENT) = {
 #ifdef SENR_TEMP
     { REPORT_INTERVAL, 150 * TEMP_SCALER, -50 * TEMP_SCALER },
 #endif

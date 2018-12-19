@@ -43,11 +43,12 @@ static const uint16_t LiCharged_mV = 4200;
 static const uint16_t LiDischarge_mV = 2900;
 
 /** @brief HID report descriptor of chrg_if */
-__ALIGN_BEGIN static const uint8_t ChargerReport[] __ALIGN_END =
+__alignment(USBD_DATA_ALIGNMENT)
+static const uint8_t ChargerReport[] __align(USBD_DATA_ALIGNMENT) =
 {
 #if 1
 HID_USAGE_PAGE_POWER_DEVICE,
-    HID_USAGE_PS_UPS,
+    HID_USAGE_PS_POWER_SUPPLY,
     HID_COLLECTION_APPLICATION(
 
         /* USB input */
@@ -219,7 +220,7 @@ struct {
     struct {
         uint16_t mA;
     }output;
-}__packed vout_input = {
+}__packed vout_input __align(USBD_DATA_ALIGNMENT) = {
     .id = 2,
 };
 
@@ -241,7 +242,7 @@ struct {
             uint8_t b;
         };
     }battery;
-}__packed chrg_input = {
+}__packed chrg_input __align(USBD_DATA_ALIGNMENT) = {
     .id = 4,
     .battery.b = 0,
 };
@@ -252,7 +253,7 @@ struct {
     struct {
         uint16_t mV;
     }usb;
-}__packed chrg_ftUsb = {
+}__packed chrg_ftUsb __align(USBD_DATA_ALIGNMENT) = {
     .id = 1,
     .usb.mV = 5000,
 };
@@ -273,7 +274,7 @@ typedef struct {
     }out;
 }__packed Charger_FtOutType;
 
-Charger_FtOutType chrg_ftOut = {
+Charger_FtOutType chrg_ftOut __align(USBD_DATA_ALIGNMENT) = {
     .id = 2,
     .out.mV = 5000,
     .out.buck = 0,
@@ -288,7 +289,7 @@ typedef struct {
     }charger;
 }__packed Charger_FtChargerType;
 
-Charger_FtChargerType chrg_ftCharger = {
+Charger_FtChargerType chrg_ftCharger __align(USBD_DATA_ALIGNMENT) = {
     .id = 3,
     .charger.mA = 100,
 };
@@ -301,7 +302,7 @@ typedef struct {
     }battery;
 }__packed Charger_FtBatteryType;
 
-Charger_FtBatteryType chrg_ftBatt = {
+Charger_FtBatteryType chrg_ftBatt __align(USBD_DATA_ALIGNMENT) = {
     .id = 4,
     .battery.capacity = 0,
 };
