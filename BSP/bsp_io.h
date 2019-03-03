@@ -42,13 +42,13 @@ extern "C"
 
 /* GPIO pins */
 #if (HW_REV > 0xA)
-#define IOUT_PIN            GPIOA, 1
-#define LIGHT_SENSOR_PIN    GPIOA, 7
+#define IOUT_PIN            PA1
+#define LIGHT_SENSOR_PIN    PA7
 #else
-#define LIGHT_SENSOR_PIN    GPIOA, 1
+#define LIGHT_SENSOR_PIN    PA1
 #endif
-#define VBAT_PIN            GPIOA, 4
-#define ICHARGE_PIN         GPIOB, 1
+#define VBAT_PIN            PA4
+#define ICHARGE_PIN         PB1
 #if (HW_REV > 0xA)
 #define IOUT_CFG            (&BSP_IOCfg[0])
 #endif
@@ -59,16 +59,16 @@ extern "C"
 #define IOUT_CTRL_CFG       (&BSP_IOCfg[3])
 #endif
 
-#define CHARGER_CURRENT_PIN GPIOA, 6
+#define CHARGER_CURRENT_PIN PA6
 #define CHARGER_CURRENT_CFG (&BSP_IOCfg[3])
 
-#define CHARGER_CTRL_PIN    GPIOF, 1
+#define CHARGER_CTRL_PIN    PF1
 #define CHARGER_CTRL_CFG    (&BSP_IOCfg[3])
 
-#define USER_LED_PIN        GPIOB, 8
+#define USER_LED_PIN        PB8
 #define USER_LED_CFG        (&BSP_IOCfg[4])
 
-#define VOUT_SELECT_PIN     GPIOF, 0
+#define VOUT_SELECT_PIN     PF0
 #define VOUT_SELECT_OUT_CFG (&BSP_IOCfg[3])
 
 /* EXTI mode */
@@ -79,26 +79,26 @@ extern "C"
 #else
 #define VOUT_SELECT         EXTI4_15_IRQ
 #define VOUT_SELECT_LINE    7
-#define MODE_SWITCH_PIN     GPIOA, 7
+#define MODE_SWITCH_PIN     PA7
 #define MODE_SWITCH_CFG     (&BSP_IOCfg[2])
 #endif
 #define _CONCAT(A,B)        A##B
 #define IRQN(LINE)          (_CONCAT(LINE,n))
 #define HANDLER(LINE)       void _CONCAT(LINE,Handler)(void)
 
-#define CHARGER_STATUS_PIN  GPIOA, 5
+#define CHARGER_STATUS_PIN  PA5
 #define CHARGER_STATUS_CFG  (&BSP_IOCfg[1])
 
-#define USB_PWR_PIN         GPIOA, 0
+#define USB_PWR_PIN         PA0
 #define USB_PWR_CFG         (&BSP_IOCfg[1])
 
-#define UART_TX_PIN         GPIOA, 2
-#define UART_RX_PIN         GPIOA, 3
+#define UART_TX_PIN         PA2
+#define UART_RX_PIN         PA3
 #define UART_TX_CFG         (&BSP_IOCfg[5])
 #define UART_RX_CFG         (&BSP_IOCfg[5])
 
-#define USB_DP_PIN          GPIOA, 12
-#define USB_DM_PIN          GPIOA, 11
+#define USB_DP_PIN          PA12
+#define USB_DM_PIN          PA11
 #define USB_DP_CFG          (&BSP_IOCfg[6])
 #define USB_DM_CFG          (&BSP_IOCfg[6])
 

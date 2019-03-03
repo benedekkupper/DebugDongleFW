@@ -52,13 +52,14 @@ void Charger_Init(void)
 #if (HW_REV > 0xA)
     /* Vout default: input */
     GPIO_vInitPin (VOUT_SELECT_PIN, VOUT_SELECT_IN_CFG);
+    *GPIO_pxPinCallback(VOUT_SELECT_PIN) = Charger_onSwitchChange;
 #else
     GPIO_vInitPin (VOUT_SELECT_PIN, VOUT_SELECT_OUT_CFG);
 
     /* Switch controls Vout as long as USB is not configured */
     GPIO_vInitPin (MODE_SWITCH_PIN, MODE_SWITCH_CFG);
+    *GPIO_pxPinCallback(MODE_SWITCH_PIN) = Charger_onSwitchChange;
 #endif
-    GPIO_xPinCallbacks[VOUT_SELECT_LINE] = Charger_onSwitchChange;
     NVIC_EnableIRQ(IRQN(VOUT_SELECT));
 
     /* Apply switch configuration now */
@@ -74,7 +75,7 @@ static void Charger_onSwitchChange(uint32_t x)
 #if (HW_REV > 0xA)
     GPIO_vWritePin(USER_LED_PIN, GPIO_eReadPin(VOUT_SELECT_PIN));
 #else
-    GPIO_vWritePin(USER_LED_PIN, GPIO_eReadPin(MODE_SWITCH_PIN));
+    Output_SetVoltage(1 - GPIO_eReadPin(MODE_SWITCH_PIN));
 #endif
 }
 
