@@ -332,6 +332,14 @@ struct {
 #endif
 };
 
+const USBD_HID_ReportConfigType sensReportConfig = {
+        .Desc = SensorReport,
+        .DescLength = sizeof(SensorReport),
+        .Input.MaxSize = sizeof(Sensor_InReportType),
+        .Input.Interval_ms = REPORT_INTERVAL,
+        .Feature.MaxSize = sizeof(sens_feature),
+};
+
 /**
  * @brief Sends the IN report
  */
@@ -408,18 +416,13 @@ const USBD_HID_AppType sensApp =
     .Deinit     = (void (*)(void*))Analog_Halt,
     .SetReport  = Sensor_SetReport,
     .GetReport  = Sensor_GetReport,
-    .Report     = {
-            .Desc = SensorReport,
-            .Length = sizeof(SensorReport),
-    },
+    .Report     = &sensReportConfig,
 };
 
 /** @brief Sensors HID Interface (and reference) */
 USBD_HID_IfHandleType hsens_if = {
     .App = &sensApp,
     .Base.AltCount = 1,
-    .Config.InEp.Size = sizeof(Sensor_InReportType),
-    .Config.InEp.Interval_ms = REPORT_INTERVAL,
 }, *const sens_if = &hsens_if;
 
 

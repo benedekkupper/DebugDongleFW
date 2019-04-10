@@ -33,8 +33,8 @@ static const ADC_InitType adcSettings =
     .LeftAlignment          = DISABLE,
     .Resolution             = ADC_RESOLUTION_12BIT,
     .ScanDirection          = ADC_SCAN_FORWARD,
-    .Trigger.Source         = ADC_TRIGGER_SRC,
-    .Trigger.Edge           = EDGE_RISING,
+    .TriggerSource          = ADC_TRIGGER_SRC,
+    .TriggerEdge            = EDGE_RISING,
     .LPAutoWait             = DISABLE,
     .LPAutoPowerOff         = ENABLE,
 };
@@ -130,7 +130,7 @@ static void analogConvertMeasured(void * handle)
 void Analog_Init(void)
 {
     ADC_vInit(adc, &adcSettings);
-    ADC_eCalibrate(adc, FALSE);
+    ADC_eCalibrate(adc, false);
 
     ADC_vChannelConfig(adc, adcChannels, sizeof(adcChannels)/sizeof(adcChannels[0]));
 

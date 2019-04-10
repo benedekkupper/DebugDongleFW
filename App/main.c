@@ -35,11 +35,15 @@
 #include <sens_if.h>
 #include <vcp_if.h>
 
+VCP_HandleType vcp_usart2;
+USART_HandleType *const vcp_uart = &vcp_usart2.Uart;
+USBD_CDC_IfHandleType *const vcp_if = &vcp_usart2.CdcIf;
+
 /* Lightweight periodic scheduler */
 void SysTick_Handler(void)
 {
     {
-        VCP_Periodic();
+        VCP_Periodic(&vcp_usart2);
         Sensor_Periodic();
         Charger_Periodic();
     }

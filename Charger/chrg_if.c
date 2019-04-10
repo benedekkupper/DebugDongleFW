@@ -48,7 +48,7 @@ static const uint8_t ChargerReport[] __align(USBD_DATA_ALIGNMENT) =
 {
 #if 1
 HID_USAGE_PAGE_POWER_DEVICE,
-    HID_USAGE_PS_POWER_SUPPLY,
+    HID_USAGE_PS_PERIPHERAL,
     HID_COLLECTION_APPLICATION(
 
         /* USB input */
@@ -305,6 +305,15 @@ typedef struct {
 Charger_FtBatteryType chrg_ftBatt __align(USBD_DATA_ALIGNMENT) = {
     .id = 4,
     .battery.capacity = 0,
+};
+
+const USBD_HID_ReportConfigType chrgReportConfig = {
+        .Desc = ChargerReport,
+        .DescLength = sizeof(ChargerReport),
+        .MaxId = 4,
+        .Input.MaxSize = sizeof(chrg_input),
+        .Input.Interval_ms = REPORT_INTERVAL,
+        .Feature.MaxSize = sizeof(chrg_ftOut),
 };
 
 /**
@@ -610,17 +619,11 @@ const USBD_HID_AppType chrgApp =
     .Deinit     = (void (*)(void*))Charger_ClearConfig,
     .SetReport  = Charger_SetReport,
     .GetReport  = Charger_GetReport,
-    .Report     = {
-            .Desc = ChargerReport,
-            .Length = sizeof(ChargerReport),
-            .IDs = 4,
-    },
+    .Report     = &chrgReportConfig,
 };
 
 /** @brief Charger HID Interface (and reference) */
 USBD_HID_IfHandleType hchrg_if = {
     .App = &chrgApp,
     .Base.AltCount = 1,
-    .Config.InEp.Size        = sizeof(chrg_input),
-    .Config.InEp.Interval_ms = REPORT_INTERVAL,
 }, *const chrg_if = &hchrg_if;

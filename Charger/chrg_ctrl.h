@@ -61,7 +61,7 @@ void Charger_SetCurrent(ChargeCurrentType CurrentLevel);
 void Output_SetVoltage(OutputVoltageType Voltage);
 OutputVoltageType Output_GetVoltage(void);
 
-boolean_t Charger_UsbPowerPresent(void);
+bool Charger_UsbPowerPresent(void);
 void Charger_Suspend(void);
 void Charger_Resume(void);
 

@@ -29,10 +29,32 @@ extern "C"
 #endif
 
 #include <usbd_cdc.h>
+#include <xpd_usart.h>
 
-extern USBD_CDC_IfHandleType *const vcp_if;
+#define VCP_OUT_DATA_SIZE   128
+#define VCP_IN_DATA_SIZE    128
 
-void VCP_Periodic(void);
+typedef enum
+{
+    VCP_BUFFER_EMPTY = 0,
+    VCP_BUFFER_FULL,
+    VCP_BUFFER_RECEIVING,
+    VCP_BUFFER_TRANSMITTING
+}VCP_BufferStatusType;
+
+typedef struct {
+    USBD_CDC_IfHandleType CdcIf;
+    USART_HandleType Uart;
+    uint8_t OutData[2][VCP_OUT_DATA_SIZE / 2];
+    VCP_BufferStatusType OutStatus[2];
+    uint16_t OutLength;
+    uint8_t InData[VCP_IN_DATA_SIZE];
+    uint16_t Index;
+}VCP_HandleType;
+
+extern const USBD_CDC_AppType vcpApp;
+
+void VCP_Periodic(VCP_HandleType *vcp);
 
 #ifdef __cplusplus
 }

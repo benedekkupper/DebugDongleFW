@@ -32,6 +32,7 @@
 USBD_DFU_IfHandleType __attribute__((section (".dfuSharedSection"))) hdfu_if;
 USBD_DFU_IfHandleType *const dfu_if = &hdfu_if;
 
+extern USBD_CDC_IfHandleType *const vcp_if;
 
 /** @brief USB device configuration */
 const USBD_DescriptionType hdev_cfg = {
@@ -104,14 +105,15 @@ void UsbDevice_Init(void)
 
         default:
         {
+            vcp_if->App = &vcpApp;
             /* All fields of Config have to be properly set up */
             vcp_if->Config.InEpNum  = 0x81;
             vcp_if->Config.OutEpNum = 0x01;
             vcp_if->Config.NotEpNum = 0x8F;
 
-            chrg_if->Config.InEp.Num = 0x82;
+            chrg_if->Config.InEpNum = 0x82;
 
-            sens_if->Config.InEp.Num = 0x83;
+            sens_if->Config.InEpNum = 0x83;
 
             USBD_DFU_AppInit(dfu_if, 250); /* Detach can be carried out within 250 ms */
 

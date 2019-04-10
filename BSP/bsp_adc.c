@@ -31,13 +31,13 @@ ADC_HandleType hadc, *const adc = &hadc;
 
 static const DMA_InitType dmaSetup =
 {
-    .Priority                 = LOW,
-    .Mode                     = DMA_MODE_CIRCULAR,
-    .Memory.DataAlignment     = DMA_ALIGN_HALFWORD,
-    .Memory.Increment         = ENABLE,
-    .Peripheral.DataAlignment = DMA_ALIGN_HALFWORD,
-    .Peripheral.Increment     = DISABLE,
-    .Direction                = DMA_PERIPH2MEMORY,
+    .Priority           = LOW,
+    .Mode               = DMA_MODE_CIRCULAR,
+    .MemoryDataAlign    = DMA_ALIGN_HALFWORD,
+    .MemoryInc          = ENABLE,
+    .PeriphDataAlign    = DMA_ALIGN_HALFWORD,
+    .PeriphInc          = DISABLE,
+    .Direction          = DMA_PERIPH2MEMORY,
 };
 
 static void adcinit(void * handle)

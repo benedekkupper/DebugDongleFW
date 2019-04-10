@@ -256,9 +256,9 @@ OutputVoltageType Output_GetVoltage(void)
 
 /**
  * @brief Determines USB power connection state.
- * @return TRUE if USB power is present, FALSE if not
+ * @return true if USB power is present, false if not
  */
-boolean_t Charger_UsbPowerPresent(void)
+bool Charger_UsbPowerPresent(void)
 {
     return !GPIO_eReadPin(USB_PWR_PIN);
 }

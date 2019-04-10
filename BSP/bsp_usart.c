@@ -29,20 +29,18 @@ void DMA1_Channel4_5_IRQHandler(void);
 DMA_HandleType dmauat;
 DMA_HandleType dmauar;
 
-USART_HandleType hvcp_uart, *const vcp_uart = &hvcp_uart;
-
 /* UART dependencies initialization */
 static void BSP_VCP_UART_Init(void * handle)
 {
     DMA_InitType dmaSetup =
     {
-        .Priority                 = MEDIUM,
-        .Mode                     = DMA_MODE_NORMAL,
-        .Memory.DataAlignment     = DMA_ALIGN_BYTE,
-        .Memory.Increment         = ENABLE,
-        .Peripheral.DataAlignment = DMA_ALIGN_BYTE,
-        .Peripheral.Increment     = DISABLE,
-        .Direction                = DMA_MEMORY2PERIPH,
+        .Priority           = MEDIUM,
+        .Mode               = DMA_MODE_NORMAL,
+        .MemoryDataAlign    = DMA_ALIGN_BYTE,
+        .MemoryInc          = ENABLE,
+        .PeriphDataAlign    = DMA_ALIGN_BYTE,
+        .PeriphInc          = DISABLE,
+        .Direction          = DMA_MEMORY2PERIPH,
     };
 
     /* GPIO settings */
